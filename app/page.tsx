@@ -4,16 +4,14 @@ import React, { useEffect, useRef, useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusCircle, Link as LinkIcon, Trash2 } from "lucide-react";
+import { PlusCircle, Link as LinkIcon, Trash2, Sparkles, Code2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Relation = {
   id: number;
@@ -51,13 +49,24 @@ const getSizeFromAge = (age: number) => {
   return MIN_SIZE + (capped / MAX_AGE_FOR_SCALE) * (MAX_SIZE - MIN_SIZE);
 };
 
+/* Miro pastel palette for node colors */
+const MIRO_PASTELS = [
+  "#ffc6c6", // coral
+  "#ffd8f4", // rose
+  "#c3faf5", // teal
+  "#ffe6cd", // orange
+  "#fde0f0", // pink
+  "#d4e4ff", // light blue
+  "#e0f5d0", // light green
+  "#fff3c6", // light yellow
+];
+
 const getColorFromName = (name: string) => {
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 85%)`;
+  return MIRO_PASTELS[Math.abs(hash) % MIRO_PASTELS.length];
 };
 
 /* -------------------- Main Component -------------------- */
@@ -90,6 +99,7 @@ export default function Home() {
   const [draggedId, setDraggedId] = useState<number | null>(null);
   
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
+  const [showJson, setShowJson] = useState(true);
 
   /* ------ Form Logic ------ */
   const personForm = useForm<z.infer<typeof personSchema>>({
@@ -305,74 +315,90 @@ export default function Home() {
   }, [persons]);
 
   return (
-    <div className="flex flex-col lg:flex-row h-screen bg-gray-50 text-gray-900 overflow-hidden">
+    <div className="flex flex-col lg:flex-row h-screen bg-white text-[#1c1c1e] overflow-hidden">
       {/* Left Sidebar */}
-      <div className="w-full lg:w-96 flex flex-col border-r border-gray-200 bg-white z-10 shadow-sm shrink-0">
+      <div className="w-full lg:w-[400px] flex flex-col bg-white z-10 shrink-0 ring-shadow">
         <div className="flex-1 overflow-y-auto min-h-0">
-          <div className="p-4 space-y-6">
+          <div className="p-6 space-y-6">
+            {/* Header */}
             <div>
-              <h2 className="text-xl font-bold tracking-tight">Relation Builder</h2>
-              <p className="text-sm text-gray-500">Create nodes and link them below.</p>
+              <div className="flex items-center gap-2.5 mb-1.5">
+                <div className="w-8 h-8 rounded-lg bg-[#5b76fe] flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <h1 className="text-[24px] font-semibold tracking-[-0.72px] leading-[1.15] text-[#1c1c1e]">
+                  Relation Builder
+                </h1>
+              </div>
+              <p className="text-[14px] text-[#555a6a] leading-relaxed ml-[42px]">
+                Create nodes and link them on the canvas.
+              </p>
             </div>
             
-            <Separator />
+            <Separator className="bg-[#e0e2e8]" />
             
             {/* Add Person Form */}
             <form onSubmit={personForm.handleSubmit(onAddPerson)}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <PlusCircle className="w-4 h-4" /> Add Person
+              <Card className="bg-[#fff8f6] border-none">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-[16px] flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-[#ffc6c6] flex items-center justify-center">
+                      <PlusCircle className="w-3.5 h-3.5 text-[#600000]" />
+                    </div>
+                    Add Person
                   </CardTitle>
                   <CardDescription>Create a new node in the graph.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name</Label>
+                <CardContent className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name" className="text-[13px] font-medium text-[#555a6a]">Name</Label>
                     <Input id="name" placeholder="e.g. Alice" {...personForm.register("name")} />
                     {personForm.formState.errors.name && (
-                      <p className="text-xs text-red-500">{personForm.formState.errors.name.message}</p>
+                      <p className="text-xs text-[#e53e3e]">{personForm.formState.errors.name.message}</p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="age">Age</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="age" className="text-[13px] font-medium text-[#555a6a]">Age</Label>
                     <Input id="age" type="number" placeholder="e.g. 28" {...personForm.register("age")} />
                     {personForm.formState.errors.age && (
-                      <p className="text-xs text-red-500">{personForm.formState.errors.age.message}</p>
+                      <p className="text-xs text-[#e53e3e]">{personForm.formState.errors.age.message}</p>
                     )}
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="avatar">Avatar URL (Optional)</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="avatar" className="text-[13px] font-medium text-[#555a6a]">Avatar URL <span className="text-[#a5a8b5]">(Optional)</span></Label>
                     <Input id="avatar" type="url" placeholder="https://..." {...personForm.register("avatar")} />
                     {personForm.formState.errors.avatar && (
-                      <p className="text-xs text-red-500">{personForm.formState.errors.avatar.message}</p>
+                      <p className="text-xs text-[#e53e3e]">{personForm.formState.errors.avatar.message}</p>
                     )}
                   </div>
-                  <Button type="submit" className="w-full">Create Person</Button>
+                  <Button type="submit" className="w-full mt-1">Create Person</Button>
                 </CardContent>
               </Card>
             </form>
 
-            <Separator />
+            <Separator className="bg-[#e0e2e8]" />
 
             {/* Add Relation Form */}
             <form onSubmit={relationForm.handleSubmit(onAddRelation)}>
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <LinkIcon className="w-4 h-4" /> Add Relation
+              <Card className="bg-[#f5fffe] border-none">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-[16px] flex items-center gap-2">
+                    <div className="w-6 h-6 rounded-md bg-[#c3faf5] flex items-center justify-center">
+                      <LinkIcon className="w-3.5 h-3.5 text-[#187574]" />
+                    </div>
+                    Add Relation
                   </CardTitle>
                   <CardDescription>Link two existing people together.</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label>Source Person</Label>
+                <CardContent className="space-y-3.5">
+                  <div className="space-y-1.5">
+                    <Label className="text-[13px] font-medium text-[#555a6a]">Source Person</Label>
                     <Controller
                       name="sourceId"
                       control={relationForm.control}
                       render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value?.toString()}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select origin..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -384,18 +410,18 @@ export default function Home() {
                       )}
                     />
                     {relationForm.formState.errors.sourceId && (
-                      <p className="text-xs text-red-500">{relationForm.formState.errors.sourceId.message}</p>
+                      <p className="text-xs text-[#e53e3e]">{relationForm.formState.errors.sourceId.message}</p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label>Target Person</Label>
+                  <div className="space-y-1.5">
+                    <Label className="text-[13px] font-medium text-[#555a6a]">Target Person</Label>
                     <Controller
                       name="targetId"
                       control={relationForm.control}
                       render={({ field }) => (
                         <Select onValueChange={field.onChange} value={field.value?.toString()}>
-                          <SelectTrigger>
+                          <SelectTrigger className="w-full">
                             <SelectValue placeholder="Select destination..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -407,31 +433,39 @@ export default function Home() {
                       )}
                     />
                     {relationForm.formState.errors.targetId && (
-                      <p className="text-xs text-red-500">{relationForm.formState.errors.targetId.message}</p>
+                      <p className="text-xs text-[#e53e3e]">{relationForm.formState.errors.targetId.message}</p>
                     )}
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="relationLabel">Relation Label</Label>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="relationLabel" className="text-[13px] font-medium text-[#555a6a]">Relation Label</Label>
                     <Input id="relationLabel" placeholder="e.g. friend, sibling" {...relationForm.register("relationLabel")} />
                     {relationForm.formState.errors.relationLabel && (
-                      <p className="text-xs text-red-500">{relationForm.formState.errors.relationLabel.message}</p>
+                      <p className="text-xs text-[#e53e3e]">{relationForm.formState.errors.relationLabel.message}</p>
                     )}
                   </div>
                   
-                  <Button type="submit" variant="secondary" className="w-full">Create Link</Button>
+                  <Button type="submit" variant="outline" className="w-full mt-1">Create Link</Button>
                 </CardContent>
               </Card>
             </form>
 
-            <Separator />
+            <Separator className="bg-[#e0e2e8]" />
             
-            {/* JSON Output block to fulfill "user's data will be converted into json data" */}
-            <div className="space-y-2 pb-4">
-              <Label>Raw JSON Output</Label>
-              <div className="bg-gray-900 rounded-md p-4 text-xs text-gray-100 font-mono overflow-x-auto whitespace-pre">
-                {JSON.stringify(persons, null, 2)}
-              </div>
+            {/* JSON Output toggle */}
+            <div className="space-y-2.5 pb-4">
+              <button
+                onClick={() => setShowJson(!showJson)}
+                className="flex items-center gap-2 text-[13px] font-medium text-[#555a6a] hover:text-[#1c1c1e] transition-colors duration-200"
+              >
+                <Code2 className="w-4 h-4" />
+                {showJson ? "Hide" : "Show"} Raw JSON
+              </button>
+              {showJson && (
+                <div className="ring-shadow rounded-xl p-4 text-[12px] text-[#555a6a] font-mono overflow-x-auto whitespace-pre bg-[#f9fafb]">
+                  {JSON.stringify(persons, null, 2)}
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -440,7 +474,12 @@ export default function Home() {
       {/* Right Canvas Area */}
       <div 
         ref={containerRef}
-        className="relative flex-1 h-full w-full bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] bg-size-[16px_16px] overflow-hidden"
+        className="relative flex-1 h-full w-full overflow-hidden"
+        style={{
+          backgroundColor: "#ffffff",
+          backgroundImage: "radial-gradient(#e0e2e8 1px, transparent 1px)",
+          backgroundSize: "20px 20px",
+        }}
       >
         <svg
           className="absolute inset-0 w-full h-full"
@@ -485,7 +524,7 @@ export default function Home() {
 
             return (
               <g key={idx}>
-                <path stroke="#9CA3AF" strokeWidth={2} fill="none" strokeLinecap="round">
+                <path stroke="#c7cad5" strokeWidth={2} fill="none" strokeLinecap="round" strokeDasharray="6 4">
                   <animate 
                     attributeName="d" 
                     values={`M ${x1} ${y1} Q ${cx1} ${cy1} ${x2} ${y2}; M ${x1} ${y1} Q ${cx2} ${cy2} ${x2} ${y2}; M ${x1} ${y1} Q ${cx1} ${cy1} ${x2} ${y2}`} 
@@ -494,34 +533,66 @@ export default function Home() {
                   />
                 </path>
                 {showAB && (
-                  <text
-                    x={tX1 + (showBA ? nx * offset : 0)}
-                    y={tY1 + (showBA ? ny * offset : 0)}
-                    fontSize={12}
-                    textAnchor="middle"
-                    alignmentBaseline="middle"
-                    fill="#111827"
-                    style={{ background: "white", pointerEvents: "none", fontWeight: 600 }}
-                  >
-                    <animate attributeName="x" values={`${tX1 + (showBA ? nx * offset : 0)}; ${tX2 + (showBA ? nx * offset : 0)}; ${tX1 + (showBA ? nx * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
-                    <animate attributeName="y" values={`${tY1 + (showBA ? ny * offset : 0)}; ${tY2 + (showBA ? ny * offset : 0)}; ${tY1 + (showBA ? ny * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
-                    {pair.labelAB}
-                  </text>
+                  <g>
+                    <rect
+                      rx="4"
+                      ry="4"
+                      fill="white"
+                      stroke="#e0e2e8"
+                      strokeWidth="1"
+                      x={tX1 + (showBA ? nx * offset : 0) - 24}
+                      y={tY1 + (showBA ? ny * offset : 0) - 10}
+                      width="48"
+                      height="20"
+                    >
+                      <animate attributeName="x" values={`${tX1 + (showBA ? nx * offset : 0) - 24}; ${tX2 + (showBA ? nx * offset : 0) - 24}; ${tX1 + (showBA ? nx * offset : 0) - 24}`} dur={`${dur}s`} repeatCount="indefinite" />
+                      <animate attributeName="y" values={`${tY1 + (showBA ? ny * offset : 0) - 10}; ${tY2 + (showBA ? ny * offset : 0) - 10}; ${tY1 + (showBA ? ny * offset : 0) - 10}`} dur={`${dur}s`} repeatCount="indefinite" />
+                    </rect>
+                    <text
+                      x={tX1 + (showBA ? nx * offset : 0)}
+                      y={tY1 + (showBA ? ny * offset : 0)}
+                      fontSize={11}
+                      textAnchor="middle"
+                      alignmentBaseline="middle"
+                      fill="#555a6a"
+                      style={{ pointerEvents: "none", fontWeight: 500, fontFamily: "var(--font-sans)" }}
+                    >
+                      <animate attributeName="x" values={`${tX1 + (showBA ? nx * offset : 0)}; ${tX2 + (showBA ? nx * offset : 0)}; ${tX1 + (showBA ? nx * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
+                      <animate attributeName="y" values={`${tY1 + (showBA ? ny * offset : 0)}; ${tY2 + (showBA ? ny * offset : 0)}; ${tY1 + (showBA ? ny * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
+                      {pair.labelAB}
+                    </text>
+                  </g>
                 )}
                 {showBA && (
-                  <text
-                    x={tX1 - (showAB ? nx * offset : 0)}
-                    y={tY1 - (showAB ? ny * offset : 0)}
-                    fontSize={12}
-                    textAnchor="middle"
-                    alignmentBaseline="middle"
-                    fill="#111827"
-                    style={{ background: "white", pointerEvents: "none", fontWeight: 600 }}
-                  >
-                    <animate attributeName="x" values={`${tX1 - (showAB ? nx * offset : 0)}; ${tX2 - (showAB ? nx * offset : 0)}; ${tX1 - (showAB ? nx * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
-                    <animate attributeName="y" values={`${tY1 - (showAB ? ny * offset : 0)}; ${tY2 - (showAB ? ny * offset : 0)}; ${tY1 - (showAB ? ny * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
-                    {pair.labelBA}
-                  </text>
+                  <g>
+                    <rect
+                      rx="4"
+                      ry="4"
+                      fill="white"
+                      stroke="#e0e2e8"
+                      strokeWidth="1"
+                      x={tX1 - (showAB ? nx * offset : 0) - 24}
+                      y={tY1 - (showAB ? ny * offset : 0) - 10}
+                      width="48"
+                      height="20"
+                    >
+                      <animate attributeName="x" values={`${tX1 - (showAB ? nx * offset : 0) - 24}; ${tX2 - (showAB ? nx * offset : 0) - 24}; ${tX1 - (showAB ? nx * offset : 0) - 24}`} dur={`${dur}s`} repeatCount="indefinite" />
+                      <animate attributeName="y" values={`${tY1 - (showAB ? ny * offset : 0) - 10}; ${tY2 - (showAB ? ny * offset : 0) - 10}; ${tY1 - (showAB ? ny * offset : 0) - 10}`} dur={`${dur}s`} repeatCount="indefinite" />
+                    </rect>
+                    <text
+                      x={tX1 - (showAB ? nx * offset : 0)}
+                      y={tY1 - (showAB ? ny * offset : 0)}
+                      fontSize={11}
+                      textAnchor="middle"
+                      alignmentBaseline="middle"
+                      fill="#555a6a"
+                      style={{ pointerEvents: "none", fontWeight: 500, fontFamily: "var(--font-sans)" }}
+                    >
+                      <animate attributeName="x" values={`${tX1 - (showAB ? nx * offset : 0)}; ${tX2 - (showAB ? nx * offset : 0)}; ${tX1 - (showAB ? nx * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
+                      <animate attributeName="y" values={`${tY1 - (showAB ? ny * offset : 0)}; ${tY2 - (showAB ? ny * offset : 0)}; ${tY1 - (showAB ? ny * offset : 0)}`} dur={`${dur}s`} repeatCount="indefinite" />
+                      {pair.labelBA}
+                    </text>
+                  </g>
                 )}
               </g>
             );
@@ -534,21 +605,25 @@ export default function Home() {
           const size = getSizeFromAge(p.age);
           const isDragging = draggedId === p.id;
           const z = zOrder.indexOf(p.id);
+          const nodeColor = getColorFromName(p.name);
           
           return (
               <div
               key={p.id}
               onMouseDown={(e) => onMouseDown(e, p.id)}
-              className={`absolute rounded-full border flex flex-col items-center justify-center text-center font-semibold shadow-md cursor-grab active:cursor-grabbing hover:border-gray-500 transition-colors group overflow-hidden ${p.avatar ? 'text-white border-transparent' : 'text-gray-900 border-gray-300'}`}
+              className={`absolute rounded-full flex flex-col items-center justify-center text-center font-medium cursor-grab active:cursor-grabbing group overflow-hidden ${p.avatar ? 'text-white' : 'text-[#1c1c1e]'}`}
               style={{
                 width: `${size}px`,
                 height: `${size}px`,
                 left: `${pos.x}px`,
                 top: `${pos.y}px`,
                 zIndex: selectedPersonId === p.id && !draggedId ? 45 : z + 1,
-                boxShadow: isDragging ? "0 8px 20px rgba(0,0,0,0.15)" : undefined,
+                boxShadow: isDragging 
+                  ? "0 12px 28px rgba(91, 118, 254, 0.18), rgb(224,226,232) 0px 0px 0px 2px" 
+                  : "rgb(224,226,232) 0px 0px 0px 1.5px",
                 userSelect: "none",
-                backgroundColor: p.avatar ? "transparent" : getColorFromName(p.name),
+                backgroundColor: p.avatar ? "transparent" : nodeColor,
+                transform: isDragging ? "scale(1.05)" : "scale(1)",
               }}
             >
               {p.avatar ? (
@@ -558,18 +633,18 @@ export default function Home() {
                     style={{ backgroundImage: `url(${p.avatar})` }}
                   />
                   {/* Subtle dark gradient to ensure text readability */}
-                  <div className="absolute inset-0 w-full h-full bg-black/40 group-hover:bg-black/50 transition-colors" />
+                  <div className="absolute inset-0 w-full h-full bg-black/35 group-hover:bg-black/45 transition-colors duration-200" />
                 </>
               ) : (
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center opacity-10">
-                  <span className="font-black text-black pointer-events-none" style={{ fontSize: size * 0.7 }}>
+                <div className="absolute inset-0 w-full h-full flex items-center justify-center opacity-[0.08]">
+                  <span className="font-bold text-[#1c1c1e] pointer-events-none" style={{ fontSize: size * 0.65 }}>
                     {p.name.charAt(0).toUpperCase()}
                   </span>
                 </div>
               )}
               
-              <div className="relative z-10" style={{ fontSize: Math.max(12, Math.round(size / 7)) }}>{p.name}</div>
-              <div className={`relative z-10 font-medium ${p.avatar ? 'text-gray-200' : 'text-gray-700'}`} style={{ fontSize: Math.max(10, Math.round(size / 10)) }}>
+              <div className="relative z-10 font-semibold" style={{ fontSize: Math.max(12, Math.round(size / 7)) }}>{p.name}</div>
+              <div className={`relative z-10 font-normal ${p.avatar ? 'text-white/80' : 'text-[#555a6a]'}`} style={{ fontSize: Math.max(10, Math.round(size / 10)) }}>
                 {`Age: ${p.age}`}
               </div>
               
@@ -578,7 +653,7 @@ export default function Home() {
                   e.stopPropagation();
                   removePerson(p.id);
                 }}
-                className="absolute -top-2 -right-2 bg-red-100 text-red-600 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-200 z-20"
+                className="absolute -top-1.5 -right-1.5 bg-[#fbd4d4] text-[#e53e3e] rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[#ffc6c6] z-20 ring-shadow"
                 title="Remove person"
               >
                 <Trash2 className="w-3 h-3" />
@@ -588,15 +663,19 @@ export default function Home() {
         })}
 
         {persons.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center text-gray-400">
-            No nodes found. Add a person using the sidebar!
+          <div className="absolute inset-0 flex flex-col items-center justify-center text-[#a5a8b5] gap-3">
+            <div className="w-16 h-16 rounded-2xl bg-[#f5f6f8] flex items-center justify-center ring-shadow">
+              <Sparkles className="w-7 h-7 text-[#c7cad5]" />
+            </div>
+            <p className="text-[15px] font-medium">No nodes yet</p>
+            <p className="text-[13px]">Add a person using the sidebar to get started.</p>
           </div>
         )}
 
         {/* Canvas Backdrop Blur */}
         <div 
           onClick={() => setSelectedPersonId(null)}
-          className={`absolute inset-0 bg-gray-50/10 backdrop-blur-sm z-40 transition-all duration-300 ${selectedPersonId && !draggedId ? "opacity-100 pointer-events-auto cursor-pointer" : "opacity-0 pointer-events-none"}`} 
+          className={`absolute inset-0 bg-white/40 backdrop-blur-sm z-40 transition-all duration-300 ${selectedPersonId && !draggedId ? "opacity-100 pointer-events-auto cursor-pointer" : "opacity-0 pointer-events-none"}`} 
         />
 
         {/* Hover Information Panel */}
@@ -614,73 +693,74 @@ export default function Home() {
 
           return (
             <div 
-              className="absolute w-80 bg-white/95 backdrop-blur-md shadow-2xl border border-gray-200 rounded-2xl z-50 p-5 pointer-events-auto transition-all duration-200 animate-in fade-in zoom-in-95 cursor-auto"
+              className="absolute w-[320px] bg-white/98 backdrop-blur-md z-50 p-6 pointer-events-auto transition-all duration-200 animate-in fade-in zoom-in-95 cursor-auto rounded-2xl"
               style={{
                 left: pos.x + size / 2,
                 top: isNearTop ? pos.y + size + 20 : pos.y - 20,
                 transform: isNearTop ? "translateX(-50%)" : "translate(-50%, -100%)",
+                boxShadow: "0 8px 40px rgba(0,0,0,0.08), rgb(224,226,232) 0px 0px 0px 1px",
               }}
             >
-              <h2 className="text-sm font-bold uppercase tracking-wider text-gray-500 mb-4 pb-2 border-b">Node Details</h2>
-              <div className="space-y-5">
+              <h2 className="text-[10.5px] font-medium uppercase tracking-[0.08em] text-[#a5a8b5] mb-4 pb-2.5 border-b border-[#e0e2e8]">Node Details</h2>
+              <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   {selectedPerson.avatar ? (
-                    <div className="w-14 h-14 rounded-full bg-cover bg-center shadow-sm border border-gray-200" style={{ backgroundImage: `url(${selectedPerson.avatar})` }} />
+                    <div className="w-12 h-12 rounded-full bg-cover bg-center ring-shadow" style={{ backgroundImage: `url(${selectedPerson.avatar})` }} />
                   ) : (
-                    <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold shadow-sm border border-gray-200" style={{ backgroundColor: getColorFromName(selectedPerson.name) }}>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-semibold ring-shadow" style={{ backgroundColor: getColorFromName(selectedPerson.name) }}>
                       {selectedPerson.name.charAt(0).toUpperCase()}
                     </div>
                   )}
                   <div>
-                    <h3 className="text-xl font-bold">{selectedPerson.name}</h3>
-                    <p className="text-sm text-gray-500 font-medium">Age: {selectedPerson.age}</p>
+                    <h3 className="text-[18px] font-semibold tracking-[-0.36px] text-[#1c1c1e]">{selectedPerson.name}</h3>
+                    <p className="text-[13px] text-[#555a6a] font-medium">Age: {selectedPerson.age}</p>
                   </div>
                 </div>
                 
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                  <h4 className="font-semibold mb-2 text-gray-800 text-xs uppercase tracking-wide">Relations From Them</h4>
+                <div className="bg-[#f9fafb] rounded-xl p-3.5 ring-shadow">
+                  <h4 className="font-semibold mb-2 text-[#1c1c1e] text-[10.5px] uppercase tracking-[0.06em]">Relations From Them</h4>
                   {selectedPerson.relations.length > 0 ? (
-                    <ul className="list-disc pl-4 space-y-1 text-sm text-gray-700">
+                    <ul className="space-y-1.5 text-[13px] text-[#555a6a]">
                       {selectedPerson.relations.map((r, i) => {
                          const target = persons.find(p => p.id === r.id);
                          return (
-                           <li key={i} className="flex items-start justify-between group">
-                             <span className="flex-1 pr-2"><span className="font-medium text-gray-900">{selectedPerson.name}</span> is <span className="italic font-medium">{r.relation}</span> of <span className="font-medium text-gray-900">{target?.name}</span></span>
+                           <li key={i} className="flex items-start justify-between group/rel">
+                             <span className="flex-1 pr-2 leading-relaxed"><span className="font-medium text-[#1c1c1e]">{selectedPerson.name}</span> is <span className="italic font-medium text-[#5b76fe]">{r.relation}</span> of <span className="font-medium text-[#1c1c1e]">{target?.name}</span></span>
                              <button
                                onClick={(e) => { e.stopPropagation(); removeRelation(selectedPerson.id, r.id); }}
-                               className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-colors opacity-0 group-hover:opacity-100"
+                               className="text-[#c7cad5] hover:text-[#e53e3e] hover:bg-[#fbd4d4] p-1 rounded-md transition-all duration-200 opacity-0 group-hover/rel:opacity-100"
                                title="Delete relation"
                              >
-                               <Trash2 className="w-3.5 h-3.5" />
+                               <Trash2 className="w-3 h-3" />
                              </button>
                            </li>
                          );
                       })}
                     </ul>
                   ) : (
-                    <p className="text-xs text-gray-500 italic">No relations mapped from this person.</p>
+                    <p className="text-[12px] text-[#a5a8b5] italic">No relations mapped from this person.</p>
                   )}
                 </div>
                 
-                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
-                  <h4 className="font-semibold mb-2 text-gray-800 text-xs uppercase tracking-wide">Relations To Them</h4>
+                <div className="bg-[#f9fafb] rounded-xl p-3.5 ring-shadow">
+                  <h4 className="font-semibold mb-2 text-[#1c1c1e] text-[10.5px] uppercase tracking-[0.06em]">Relations To Them</h4>
                   {inboundRelations.length > 0 ? (
-                    <ul className="list-disc pl-4 space-y-1 text-sm text-gray-700">
+                    <ul className="space-y-1.5 text-[13px] text-[#555a6a]">
                       {inboundRelations.map((r, i) => (
-                         <li key={i} className="flex items-start justify-between group">
-                           <span className="flex-1 pr-2"><span className="font-medium text-gray-900">{r.sourceName}</span> is <span className="italic font-medium">{r.relation}</span> of <span className="font-medium text-gray-900">{selectedPerson.name}</span></span>
+                         <li key={i} className="flex items-start justify-between group/rel">
+                           <span className="flex-1 pr-2 leading-relaxed"><span className="font-medium text-[#1c1c1e]">{r.sourceName}</span> is <span className="italic font-medium text-[#5b76fe]">{r.relation}</span> of <span className="font-medium text-[#1c1c1e]">{selectedPerson.name}</span></span>
                            <button
                                onClick={(e) => { e.stopPropagation(); removeRelation(r.sourceId, selectedPerson.id); }}
-                               className="text-gray-300 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-colors opacity-0 group-hover:opacity-100"
+                               className="text-[#c7cad5] hover:text-[#e53e3e] hover:bg-[#fbd4d4] p-1 rounded-md transition-all duration-200 opacity-0 group-hover/rel:opacity-100"
                                title="Delete relation"
                              >
-                               <Trash2 className="w-3.5 h-3.5" />
+                               <Trash2 className="w-3 h-3" />
                              </button>
                          </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-xs text-gray-500 italic">No relations mapped to this person.</p>
+                    <p className="text-[12px] text-[#a5a8b5] italic">No relations mapped to this person.</p>
                   )}
                 </div>
               </div>
