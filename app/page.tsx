@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight, Activity, Users, Settings } from "lucide-react";
+import { motion } from "framer-motion";
 
 export default function LandingPage() {
   return (
@@ -28,7 +29,7 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <main className="max-w-7xl mx-auto px-8 pt-20 pb-32 flex flex-col lg:flex-row items-center gap-16 overflow-hidden">
+      <main className="max-w-7xl mx-auto px-8 pt-20 pb-32 flex flex-col lg:flex-row items-center gap-16">
         
         {/* Left: Text Content */}
         <div className="flex-1 space-y-8 z-10">
@@ -99,67 +100,79 @@ export default function LandingPage() {
             </g>
 
             {/* Central Node */}
-            <g transform="translate(400, 400)" filter="url(#shadow)">
-              <circle r="64" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
-              <circle r="56" fill="#ffc6c6" />
-              <text y="8" fontSize="32" fontWeight="700" fill="#1c1c1e" textAnchor="middle">A</text>
-              <animateTransform attributeName="transform" type="translate" values="400,400; 400,385; 400,400" dur="4s" repeatCount="indefinite" />
-              
-              <rect x="-40" y="80" width="80" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
-              <text y="96" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Alice</text>
-            </g>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+              <g transform="translate(400, 400)" filter="url(#shadow)">
+                <circle r="64" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
+                <circle r="56" fill="#ffc6c6" />
+                <text y="8" fontSize="32" fontWeight="700" fill="#1c1c1e" textAnchor="middle">A</text>
+                <animateTransform attributeName="transform" type="translate" values="400,400; 400,385; 400,400" dur="4s" repeatCount="indefinite" />
+                
+                <rect x="-40" y="80" width="80" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
+                <text y="96" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Alice</text>
+              </g>
+            </motion.g>
 
             {/* Node 2 (Top Left) */}
-            <g transform="translate(200, 250)" filter="url(#shadow)">
-              <circle r="48" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
-              <circle r="42" fill="#c3faf5" />
-              <text y="6" fontSize="24" fontWeight="700" fill="#1c1c1e" textAnchor="middle">B</text>
-              <animateTransform attributeName="transform" type="translate" values="200,250; 190,260; 200,250" dur="5s" repeatCount="indefinite" />
-              
-              <rect x="-35" y="60" width="70" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
-              <text y="76" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Bob</text>
-            </g>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+              <g transform="translate(200, 250)" filter="url(#shadow)">
+                <circle r="48" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
+                <circle r="42" fill="#c3faf5" />
+                <text y="6" fontSize="24" fontWeight="700" fill="#1c1c1e" textAnchor="middle">B</text>
+                <animateTransform attributeName="transform" type="translate" values="200,250; 190,260; 200,250" dur="5s" repeatCount="indefinite" />
+                
+                <rect x="-35" y="60" width="70" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
+                <text y="76" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Bob</text>
+              </g>
+            </motion.g>
 
             {/* Node 3 (Top Right) */}
-            <g transform="translate(650, 200)" filter="url(#shadow)">
-              <circle r="56" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
-              <circle r="48" fill="#ffe6cd" />
-              <text y="8" fontSize="28" fontWeight="700" fill="#1c1c1e" textAnchor="middle">C</text>
-              <animateTransform attributeName="transform" type="translate" values="650,200; 660,190; 650,200" dur="4.5s" repeatCount="indefinite" />
-              
-              <rect x="-45" y="70" width="90" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
-              <text y="86" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Charlie</text>
-            </g>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+              <g transform="translate(650, 200)" filter="url(#shadow)">
+                <circle r="56" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
+                <circle r="48" fill="#ffe6cd" />
+                <text y="8" fontSize="28" fontWeight="700" fill="#1c1c1e" textAnchor="middle">C</text>
+                <animateTransform attributeName="transform" type="translate" values="650,200; 660,190; 650,200" dur="4.5s" repeatCount="indefinite" />
+                
+                <rect x="-45" y="70" width="90" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
+                <text y="86" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Charlie</text>
+              </g>
+            </motion.g>
 
             {/* Node 4 (Bottom Right) */}
-            <g transform="translate(500, 650)" filter="url(#shadow)">
-              <circle r="44" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
-              <circle r="38" fill="#ffd8f4" />
-              <text y="6" fontSize="22" fontWeight="700" fill="#1c1c1e" textAnchor="middle">D</text>
-              <animateTransform attributeName="transform" type="translate" values="500,650; 500,665; 500,650" dur="3.8s" repeatCount="indefinite" />
-              
-              <rect x="-40" y="55" width="80" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
-              <text y="71" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Diana</text>
-            </g>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+              <g transform="translate(500, 650)" filter="url(#shadow)">
+                <circle r="44" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
+                <circle r="38" fill="#ffd8f4" />
+                <text y="6" fontSize="22" fontWeight="700" fill="#1c1c1e" textAnchor="middle">D</text>
+                <animateTransform attributeName="transform" type="translate" values="500,650; 500,665; 500,650" dur="3.8s" repeatCount="indefinite" />
+                
+                <rect x="-40" y="55" width="80" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
+                <text y="71" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Diana</text>
+              </g>
+            </motion.g>
 
             {/* Node 5 (Mid Left) */}
-            <g transform="translate(150, 450)" filter="url(#shadow)">
-              <circle r="40" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
-              <circle r="34" fill="#d4e4ff" />
-              <text y="5" fontSize="20" fontWeight="700" fill="#1c1c1e" textAnchor="middle">E</text>
-              <animateTransform attributeName="transform" type="translate" values="150,450; 165,440; 150,450" dur="6s" repeatCount="indefinite" />
-              
-              <rect x="-35" y="52" width="70" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
-              <text y="68" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Eve</text>
-            </g>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+              <g transform="translate(150, 450)" filter="url(#shadow)">
+                <circle r="40" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
+                <circle r="34" fill="#d4e4ff" />
+                <text y="5" fontSize="20" fontWeight="700" fill="#1c1c1e" textAnchor="middle">E</text>
+                <animateTransform attributeName="transform" type="translate" values="150,450; 165,440; 150,450" dur="6s" repeatCount="indefinite" />
+                
+                <rect x="-35" y="52" width="70" height="24" rx="12" fill="white" stroke="#e0e2e8"/>
+                <text y="68" fontSize="12" fontWeight="600" fill="#1c1c1e" textAnchor="middle">Eve</text>
+              </g>
+            </motion.g>
             
             {/* Node 6 (Far Right) */}
-            <g transform="translate(700, 450)" filter="url(#shadow)">
-              <circle r="36" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
-              <circle r="30" fill="#e0f5d0" />
-              <text y="5" fontSize="18" fontWeight="700" fill="#1c1c1e" textAnchor="middle">F</text>
-              <animateTransform attributeName="transform" type="translate" values="700,450; 690,460; 700,450" dur="5.5s" repeatCount="indefinite" />
-            </g>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+              <g transform="translate(700, 450)" filter="url(#shadow)">
+                <circle r="36" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
+                <circle r="30" fill="#e0f5d0" />
+                <text y="5" fontSize="18" fontWeight="700" fill="#1c1c1e" textAnchor="middle">F</text>
+                <animateTransform attributeName="transform" type="translate" values="700,450; 690,460; 700,450" dur="5.5s" repeatCount="indefinite" />
+              </g>
+            </motion.g>
           </svg>
         </div>
       </main>
