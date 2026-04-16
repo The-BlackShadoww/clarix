@@ -3,9 +3,58 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight, Activity, Users, Settings } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform } from "framer-motion";
 
 export default function LandingPage() {
+  const dragA = { x: useMotionValue(0), y: useMotionValue(0) };
+  const dragB = { x: useMotionValue(0), y: useMotionValue(0) };
+  const dragC = { x: useMotionValue(0), y: useMotionValue(0) };
+  const dragD = { x: useMotionValue(0), y: useMotionValue(0) };
+  const dragE = { x: useMotionValue(0), y: useMotionValue(0) };
+  const dragF = { x: useMotionValue(0), y: useMotionValue(0) };
+
+  const useDynamicPath = (n1: any, n2: any, startX: number, startY: number, endX: number, endY: number, qX: number, qY: number) => {
+    return useTransform(
+      [n1.x, n1.y, n2.x, n2.y],
+      ([dx1, dy1, dx2, dy2]) => {
+        const sx = startX + (dx1 as number);
+        const sy = startY + (dy1 as number);
+        const ex = endX + (dx2 as number);
+        const ey = endY + (dy2 as number);
+        
+        const origMidX = startX + (endX - startX) / 2;
+        const origMidY = startY + (endY - startY) / 2;
+        const qOffsetX = qX - origMidX;
+        const qOffsetY = qY - origMidY;
+        
+        const newMidX = sx + (ex - sx) / 2;
+        const newMidY = sy + (ey - sy) / 2;
+
+        return `M ${sx} ${sy} Q ${newMidX + qOffsetX} ${newMidY + qOffsetY} ${ex} ${ey}`;
+      }
+    );
+  };
+
+  const pathA_B = useDynamicPath(dragA, dragB, 400, 400, 200, 250, 250, 300);
+  const pathA_C = useDynamicPath(dragA, dragC, 400, 400, 650, 200, 600, 350);
+  const pathA_D = useDynamicPath(dragA, dragD, 400, 400, 500, 650, 550, 550);
+  const pathA_E = useDynamicPath(dragA, dragE, 400, 400, 150, 450, 200, 500);
+  const pathC_F = useDynamicPath(dragC, dragF, 650, 200, 700, 450, 750, 300);
+
+  const useLabelOffset = (n1: any, n2: any, axis: 'x' | 'y') => {
+    return useTransform(
+      [n1[axis], n2[axis]],
+      ([d1, d2]) => ((d1 as number) + (d2 as number)) / 2
+    );
+  };
+
+  const labelAB_x = useLabelOffset(dragA, dragB, 'x');
+  const labelAB_y = useLabelOffset(dragA, dragB, 'y');
+  const labelAC_x = useLabelOffset(dragA, dragC, 'x');
+  const labelAC_y = useLabelOffset(dragA, dragC, 'y');
+  const labelAD_x = useLabelOffset(dragA, dragD, 'x');
+  const labelAD_y = useLabelOffset(dragA, dragD, 'y');
+
   return (
     <div className="min-h-screen bg-white text-[#1c1c1e] font-sans selection:bg-[#5b76fe] selection:text-white">
       {/* Navigation */}
@@ -70,37 +119,43 @@ export default function LandingPage() {
 
             {/* Connecting Lines */}
             <g stroke="#c7cad5" strokeWidth="3" fill="none" strokeDasharray="8 6" strokeLinecap="round">
-              <path d="M 400 400 Q 250 300 200 250">
+              <motion.path d={pathA_B}>
                 <animate attributeName="stroke-dashoffset" values="14;0" dur="1s" repeatCount="indefinite" />
-              </path>
-              <path d="M 400 400 Q 600 350 650 200">
+              </motion.path>
+              <motion.path d={pathA_C}>
                 <animate attributeName="stroke-dashoffset" values="0;14" dur="1.2s" repeatCount="indefinite" />
-              </path>
-              <path d="M 400 400 Q 550 550 500 650">
+              </motion.path>
+              <motion.path d={pathA_D}>
                 <animate attributeName="stroke-dashoffset" values="14;0" dur="1.5s" repeatCount="indefinite" />
-              </path>
-              <path d="M 400 400 Q 200 500 150 450">
+              </motion.path>
+              <motion.path d={pathA_E}>
                 <animate attributeName="stroke-dashoffset" values="0;14" dur="0.8s" repeatCount="indefinite" />
-              </path>
-              <path d="M 650 200 Q 750 300 700 450">
+              </motion.path>
+              <motion.path d={pathC_F}>
                 <animate attributeName="stroke-dashoffset" values="14;0" dur="2s" repeatCount="indefinite" />
-              </path>
+              </motion.path>
             </g>
 
             {/* Labels on paths */}
             <g fontSize="14" fontWeight="600" fill="#555a6a" textAnchor="middle" transform="translate(0, -10)">
-              <rect x="250" y="310" width="70" height="28" rx="8" fill="white" stroke="#e0e2e8"/>
-              <text x="285" y="329">manages</text>
+              <motion.g style={{ x: labelAB_x, y: labelAB_y }}>
+                <rect x="250" y="310" width="70" height="28" rx="8" fill="white" stroke="#e0e2e8"/>
+                <text x="285" y="329">manages</text>
+              </motion.g>
 
-              <rect x="500" y="340" width="60" height="28" rx="8" fill="white" stroke="#e0e2e8"/>
-              <text x="530" y="359">reports</text>
+              <motion.g style={{ x: labelAC_x, y: labelAC_y }}>
+                <rect x="500" y="340" width="60" height="28" rx="8" fill="white" stroke="#e0e2e8"/>
+                <text x="530" y="359">reports</text>
+              </motion.g>
 
-              <rect x="420" y="520" width="60" height="28" rx="8" fill="white" stroke="#e0e2e8"/>
-              <text x="450" y="539">sibling</text>
+              <motion.g style={{ x: labelAD_x, y: labelAD_y }}>
+                <rect x="420" y="520" width="60" height="28" rx="8" fill="white" stroke="#e0e2e8"/>
+                <text x="450" y="539">sibling</text>
+              </motion.g>
             </g>
 
             {/* Central Node */}
-            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab", x: dragA.x, y: dragA.y }} whileTap={{ cursor: "grabbing" }}>
               <g transform="translate(400, 400)" filter="url(#shadow)">
                 <circle r="64" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
                 <circle r="56" fill="#ffc6c6" />
@@ -113,7 +168,7 @@ export default function LandingPage() {
             </motion.g>
 
             {/* Node 2 (Top Left) */}
-            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab", x: dragB.x, y: dragB.y }} whileTap={{ cursor: "grabbing" }}>
               <g transform="translate(200, 250)" filter="url(#shadow)">
                 <circle r="48" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
                 <circle r="42" fill="#c3faf5" />
@@ -126,7 +181,7 @@ export default function LandingPage() {
             </motion.g>
 
             {/* Node 3 (Top Right) */}
-            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab", x: dragC.x, y: dragC.y }} whileTap={{ cursor: "grabbing" }}>
               <g transform="translate(650, 200)" filter="url(#shadow)">
                 <circle r="56" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
                 <circle r="48" fill="#ffe6cd" />
@@ -139,7 +194,7 @@ export default function LandingPage() {
             </motion.g>
 
             {/* Node 4 (Bottom Right) */}
-            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab", x: dragD.x, y: dragD.y }} whileTap={{ cursor: "grabbing" }}>
               <g transform="translate(500, 650)" filter="url(#shadow)">
                 <circle r="44" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
                 <circle r="38" fill="#ffd8f4" />
@@ -152,7 +207,7 @@ export default function LandingPage() {
             </motion.g>
 
             {/* Node 5 (Mid Left) */}
-            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab", x: dragE.x, y: dragE.y }} whileTap={{ cursor: "grabbing" }}>
               <g transform="translate(150, 450)" filter="url(#shadow)">
                 <circle r="40" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
                 <circle r="34" fill="#d4e4ff" />
@@ -165,7 +220,7 @@ export default function LandingPage() {
             </motion.g>
             
             {/* Node 6 (Far Right) */}
-            <motion.g drag dragSnapToOrigin style={{ cursor: "grab" }} whileTap={{ cursor: "grabbing" }}>
+            <motion.g drag dragSnapToOrigin style={{ cursor: "grab", x: dragF.x, y: dragF.y }} whileTap={{ cursor: "grabbing" }}>
               <g transform="translate(700, 450)" filter="url(#shadow)">
                 <circle r="36" fill="#ffffff" stroke="#e0e2e8" strokeWidth="2"/>
                 <circle r="30" fill="#e0f5d0" />
