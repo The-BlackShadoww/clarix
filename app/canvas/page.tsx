@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState, useMemo, useCallback } from "react"
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusCircle, Link as LinkIcon, Trash2, Sparkles, Code2, X, User, ArrowRight, ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { PlusCircle, Link as LinkIcon, Trash2, Sparkles, Code2, X, User, ArrowRight, ZoomIn, ZoomOut, Maximize, PanelLeftClose, PanelLeftOpen, Copy, Check } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -102,6 +102,13 @@ export default function Home() {
   
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);
   const [showJson, setShowJson] = useState(true);
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopyJson = () => {
+    navigator.clipboard.writeText(JSON.stringify(persons, null, 2));
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+  };
 
   /* ------ Form Logic ------ */
   const personForm = useForm<z.infer<typeof personSchema>>({
@@ -525,16 +532,30 @@ export default function Home() {
             
             {/* JSON Output toggle */}
             <div className="space-y-2.5 pb-4">
-              <button
+              <Button
+                variant="outline"
+                className="w-full flex items-center justify-center gap-2 text-[#555a6a] hover:text-[#1c1c1e] transition-colors duration-200"
                 onClick={() => setShowJson(!showJson)}
-                className="flex items-center gap-2 text-[13px] font-medium text-[#555a6a] hover:text-[#1c1c1e] transition-colors duration-200"
               >
                 <Code2 className="w-4 h-4" />
                 {showJson ? "Hide" : "Show"} Raw JSON
-              </button>
+              </Button>
               {showJson && (
-                <div className="ring-shadow rounded-xl p-4 text-[12px] text-[#555a6a] font-mono overflow-x-auto whitespace-pre bg-[#f9fafb]">
-                  {JSON.stringify(persons, null, 2)}
+                <div className="relative group">
+                  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      onClick={handleCopyJson}
+                      className="h-7 w-7 bg-[#282c34] border-[#3e4451] hover:bg-[#3e4451] text-[#a5a8b5] hover:text-white"
+                      title="Copy JSON"
+                    >
+                      {isCopied ? <Check className="w-3.5 h-3.5 text-[#00b473]" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
+                  <pre className="ring-shadow rounded-xl p-4 text-[12px] font-mono overflow-x-auto whitespace-pre bg-[#1c1c1e] text-[#a5a8b5]">
+                    <code>{JSON.stringify(persons, null, 2)}</code>
+                  </pre>
                 </div>
               )}
             </div>
