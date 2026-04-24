@@ -761,51 +761,37 @@ export default function Home() {
                 zIndex: isSelected ? 45 : z + 1,
               }}
             >
-              {/* Relative wrapper for node and badges */}
-              <div className="relative" style={{ width: `${size}px`, height: `${size}px` }}>
-                {/* The circle node */}
-                <div
-                  onMouseDown={(e) => onMouseDown(e, p.id)}
-                  className={`node-circle rounded-full w-full h-full flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden transition-all duration-300 ease-out`}
-                  style={{
-                    boxShadow: isDragging 
-                      ? "0 16px 40px rgba(91, 118, 254, 0.22), 0 0 0 3px rgba(91, 118, 254, 0.4)" 
-                      : isSelected
-                      ? "0 8px 24px rgba(91, 118, 254, 0.15), 0 0 0 2.5px #5b76fe"
-                      : "0 2px 8px rgba(0,0,0,0.06), rgb(224,226,232) 0px 0px 0px 1.5px",
-                    userSelect: "none",
-                    backgroundColor: p.avatar ? "transparent" : nodeColor,
-                    transform: isDragging ? "scale(1.1)" : isSelected ? "scale(1.06)" : "scale(1)",
-                  }}
-                >
-                  {p.avatar ? (
-                    <div 
-                      className="absolute inset-0 w-full h-full bg-cover bg-center" 
-                      style={{ backgroundImage: `url(${p.avatar})` }}
-                    />
-                  ) : (
-                    <span 
-                      className="font-semibold text-[#1c1c1e] pointer-events-none select-none" 
-                      style={{ fontSize: size * 0.38 }}
-                    >
-                      {p.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
-                </div>
-                  
-                {/* Delete button */}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removePerson(p.id);
-                  }}
-                  className="absolute top-0 right-0 bg-white text-[#e53e3e] rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-[#fbd4d4] z-20 translate-x-1/4 -translate-y-1/4"
-                  style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.1), rgb(224,226,232) 0px 0px 0px 1px" }}
-                  title="Remove person"
-                >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-
+              {/* The circle node */}
+              <div
+                onMouseDown={(e) => onMouseDown(e, p.id)}
+                className={`node-circle rounded-full flex items-center justify-center cursor-grab active:cursor-grabbing overflow-hidden transition-all duration-300 ease-out`}
+                style={{
+                  width: `${size}px`,
+                  height: `${size}px`,
+                  boxShadow: isDragging 
+                    ? "0 16px 40px rgba(91, 118, 254, 0.22), 0 0 0 3px rgba(91, 118, 254, 0.4)" 
+                    : isSelected
+                    ? "0 8px 24px rgba(91, 118, 254, 0.15), 0 0 0 2.5px #5b76fe"
+                    : "0 2px 8px rgba(0,0,0,0.06), rgb(224,226,232) 0px 0px 0px 1.5px",
+                  userSelect: "none",
+                  backgroundColor: p.avatar ? "transparent" : nodeColor,
+                  transform: isDragging ? "scale(1.1)" : isSelected ? "scale(1.06)" : "scale(1)",
+                }}
+              >
+                {p.avatar ? (
+                  <div 
+                    className="absolute inset-0 w-full h-full bg-cover bg-center" 
+                    style={{ backgroundImage: `url(${p.avatar})` }}
+                  />
+                ) : (
+                  <span 
+                    className="font-semibold text-[#1c1c1e] pointer-events-none select-none" 
+                    style={{ fontSize: size * 0.38 }}
+                  >
+                    {p.name.charAt(0).toUpperCase()}
+                  </span>
+                )}
+                
                 {/* Relation count badge */}
                 {relationCount > 0 && (
                   <div 
@@ -895,6 +881,19 @@ export default function Home() {
                     background: `linear-gradient(135deg, ${nodeColor}44 0%, ${nodeColor}18 100%)`,
                   }}
                 >
+                  {/* Delete button */}
+                  <button 
+                    onClick={() => {
+                      setSelectedPersonId(null);
+                      removePerson(selectedPerson.id);
+                    }}
+                    className="absolute top-3 right-12 w-7 h-7 rounded-full bg-white/70 hover:bg-[#fbd4d4] text-[#c7cad5] hover:text-[#e53e3e] flex items-center justify-center transition-all duration-200"
+                    style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}
+                    title="Delete person"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+
                   {/* Close button */}
                   <button 
                     onClick={() => setSelectedPersonId(null)}
