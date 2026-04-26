@@ -7,7 +7,7 @@
 - **Live Infinite Canvas**: Pan, zoom, and expand without limits. The visual workspace adapts and expands dynamically as your network grows. Features mouse-wheel zoom and UI zoom controls.
 - **Dynamic Entities**: Create nodes representing people or entities with custom names, ages, and optional avatars. Nodes are automatically styled with a beautiful pastel color palette based on their name.
 - **Real-time Layout Engine**: Link nodes together with descriptive labels (e.g., "manages", "sibling"). The interactive SVG lines curve and bend automatically as you drag nodes around the canvas.
-- **Interactive UI**: 
+- **Interactive UI**:
   - Draggable nodes with smooth animations and depth effects.
   - Collapsible sidebar for node and relation management.
   - Built-in JSON viewer to inspect or export the raw network data with a one-click copy feature.
@@ -64,7 +64,7 @@ Navigate to `/canvas` (or click "Get Started Free") to open the Relation Builder
 
 1. **Add a Node**: Open the sidebar (if closed) and use the **Add Person** form. Provide a name, age, and an optional avatar URL.
 2. **Create a Relation**: Use the **Add Relation** form. Select a Source Person, a Target Person, and define the relationship label (e.g., "Reports to").
-3. **Interact**: 
+3. **Interact**:
    - Drag nodes around the canvas.
    - Click a node to view its details or delete it.
    - Use the mouse wheel or the top-right controls to zoom in and out.
