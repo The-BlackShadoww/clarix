@@ -30,10 +30,19 @@ const relationSchema = z.object({
 });
 
 type AddRelationFormProps = {
+  /** Array of available persons to populate the dropdowns. */
   persons: Person[];
+  /** Callback fired when a new relation is successfully validated and submitted. */
   onAdd: (sourceId: number, targetId: number, relationLabel: string) => void;
 };
 
+/**
+ * A form component for creating a directed relationship between two people.
+ * Uses react-hook-form for state management and zod for schema validation.
+ *
+ * @param persons - The array of people to show in the dropdown selectors.
+ * @param onAdd - Callback function to add the relationship to the parent state.
+ */
 export const AddRelationForm: React.FC<AddRelationFormProps> = ({
   persons,
   onAdd,
@@ -43,13 +52,21 @@ export const AddRelationForm: React.FC<AddRelationFormProps> = ({
     defaultValues: { relationLabel: "", sourceId: "", targetId: "" },
   });
 
+  /**
+   * Handles successful form submission.
+   * Prevents creating a relationship from a person to themselves,
+   * passes the parsed numeric IDs and label to the callback, and resets the form.
+   */
   const onSubmit = (values: z.infer<typeof relationSchema>) => {
     const sId = Number(values.sourceId);
     const tId = Number(values.targetId);
+    
+    // Prevent self-referencing relationships
     if (sId === tId) {
       form.setError("targetId", { message: "Cannot relate to same person" });
       return;
     }
+    
     onAdd(sId, tId, values.relationLabel);
     form.reset({ relationLabel: "", sourceId: "", targetId: "" });
   };

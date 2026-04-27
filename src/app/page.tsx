@@ -5,6 +5,10 @@ import Link from "next/link";
 import { ArrowRight, Activity, Users, Settings } from "lucide-react";
 import { HeroGraphic } from "@/components/features/landing/HeroGraphic";
 
+/**
+ * The public-facing landing page route (`/`).
+ * Displays marketing copy, feature highlights, and the interactive HeroGraphic.
+ */
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-white text-[#1c1c1e] font-sans selection:bg-[#5b76fe] selection:text-white">

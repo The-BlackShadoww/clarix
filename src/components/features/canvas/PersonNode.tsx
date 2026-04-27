@@ -3,13 +3,27 @@ import { Person } from "@/types";
 import { getColorFromName, getSizeFromAge } from "@/utils";
 
 type PersonNodeProps = {
+  /** The person data object. */
   person: Person;
+  /** Current Cartesian coordinates on the canvas. */
   position: { x: number; y: number };
+  /** Depth index to render overlapping nodes correctly. */
   z: number;
+  /** True if this specific node is currently being dragged. */
   isDragging: boolean;
+  /** True if this node was the last one clicked/selected. */
   isSelected: boolean;
+  /** Mouse down handler to initiate dragging and selection. */
   onMouseDown: (e: React.MouseEvent, id: number) => void;
 };
+
+/**
+ * Renders an individual node (person) on the infinite canvas.
+ * Displays the person's avatar (or initial), name, and a badge showing relation count.
+ * Uses inline styles heavily because its position, size, and z-index update frequently (60fps during drag).
+ *
+ * @param props - Component properties.
+ */
 
 export const PersonNode: React.FC<PersonNodeProps> = ({
   person,

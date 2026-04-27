@@ -7,9 +7,13 @@ import { AddRelationForm } from "@/components/features/forms/AddRelationForm";
 import { Person } from "@/types";
 
 type SidebarProps = {
+  /** Controls whether the sidebar is visible or collapsed off-screen. */
   isOpen: boolean;
+  /** Array of all persons currently in the graph. */
   persons: Person[];
+  /** Callback fired to add a new person to the graph. */
   onAddPerson: (name: string, age: number, avatar?: string) => void;
+  /** Callback fired to add a new relationship between two persons. */
   onAddRelation: (
     sourceId: number,
     targetId: number,
@@ -17,6 +21,16 @@ type SidebarProps = {
   ) => void;
 };
 
+/**
+ * A collapsible sidebar component that serves as the main control panel for the canvas.
+ * Contains forms for adding persons and relations, and a built-in JSON viewer
+ * to inspect or copy the raw state of the graph.
+ *
+ * @param isOpen - Controls the sidebar's CSS translation state.
+ * @param persons - Current graph state to pass to forms and the JSON viewer.
+ * @param onAddPerson - Function to pass to AddPersonForm.
+ * @param onAddRelation - Function to pass to AddRelationForm.
+ */
 export const Sidebar: React.FC<SidebarProps> = ({
   isOpen,
   persons,

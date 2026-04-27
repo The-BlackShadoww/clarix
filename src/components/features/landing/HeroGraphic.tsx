@@ -8,6 +8,11 @@ import {
   MotionValue,
 } from "framer-motion";
 
+/**
+ * An animated SVG illustration displayed on the landing page hero section.
+ * Uses Framer Motion to create a floating, interactive graph that users can drag around.
+ * Demonstrates the core value proposition (dynamic relation mapping) visually.
+ */
 export const HeroGraphic: React.FC = () => {
   const ax = useMotionValue(0);
   const ay = useMotionValue(0);

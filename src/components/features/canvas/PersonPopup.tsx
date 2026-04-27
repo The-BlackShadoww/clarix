@@ -4,13 +4,27 @@ import { Person } from "@/types";
 import { getColorFromName, getSizeFromAge } from "@/utils";
 
 type PersonPopupProps = {
+  /** The person whose details are being viewed. */
   person: Person;
+  /** Cartesian coordinates of the person node to anchor the popup. */
   position: { x: number; y: number };
+  /** Array of all persons in the graph (used to calculate inbound relationships). */
   allPersons: Person[];
+  /** Callback fired when the 'X' button is clicked or outside is clicked. */
   onClose: () => void;
+  /** Callback to permanently delete this person from the graph. */
   onRemovePerson: (id: number) => void;
+  /** Callback to delete a specific incoming or outgoing relationship. */
   onRemoveRelation: (sourceId: number, targetId: number) => void;
 };
+
+/**
+ * A contextual popup that appears when a user clicks on a person node.
+ * It displays detailed information including the person's avatar, name, age,
+ * and a list of all inbound and outbound relationships, with options to delete them.
+ *
+ * @param props - Component properties.
+ */
 
 export const PersonPopup: React.FC<PersonPopupProps> = ({
   person,

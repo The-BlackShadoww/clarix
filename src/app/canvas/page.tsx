@@ -20,6 +20,11 @@ import { usePersons } from "@/hooks/usePersons";
 import { usePanZoom } from "@/hooks/usePanZoom";
 import { useGraphLayout } from "@/hooks/useGraphLayout";
 
+/**
+ * The main Canvas route (`/canvas`).
+ * Orchestrates the overall graph application by composing state hooks
+ * (usePersons, usePanZoom, useGraphLayout) and rendering the canvas elements.
+ */
 export default function CanvasPage() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedPersonId, setSelectedPersonId] = useState<number | null>(null);

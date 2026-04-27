@@ -22,15 +22,27 @@ const personSchema = z.object({
 });
 
 type AddPersonFormProps = {
+  /** Callback fired when a new person is successfully validated and submitted. */
   onAdd: (name: string, age: number, avatar?: string) => void;
 };
 
+/**
+ * A form component for creating a new person node.
+ * Uses react-hook-form for state management and zod for schema validation.
+ *
+ * @param onAdd - Callback function to add the new person to the parent state.
+ */
 export const AddPersonForm: React.FC<AddPersonFormProps> = ({ onAdd }) => {
   const form = useForm<z.infer<typeof personSchema>>({
     resolver: zodResolver(personSchema),
     defaultValues: { name: "", age: "", avatar: "" },
   });
 
+  /**
+   * Handles successful form submission.
+   * Parses the string age into a number and passes data to the onAdd callback,
+   * then resets the form to its default empty state.
+   */
   const onSubmit = (values: z.infer<typeof personSchema>) => {
     onAdd(values.name, Number(values.age), values.avatar || undefined);
     form.reset({ name: "", age: "", avatar: "" });
