@@ -114,52 +114,95 @@
   box-shadow: rgb(224, 226, 232) 0px 0px 0px 1px;
 }
 
-.ring-shadow-hover {
-  box-shadow: rgb(199, 202, 213) 0px 0px 0px 1px;
-}
+/* ------------------------------------------------------------------ */
+/* Board chrome                                                         */
+/* ------------------------------------------------------------------ */
 
-/* Smooth node pulse animation */
-@keyframes gentle-float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-/* Node circle hover glow */
-.node-circle {
-  transition:
-    transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-    box-shadow 0.3s ease;
-}
-
-.node-circle:hover {
+.board-panel {
+  background: #ffffff;
+  border-radius: 14px;
   box-shadow:
-    0 6px 20px rgba(0, 0, 0, 0.1),
-    rgb(224, 226, 232) 0px 0px 0px 2px !important;
+    0 0 0 1px rgba(16, 24, 40, 0.06),
+    0 1px 2px rgba(16, 24, 40, 0.06),
+    0 6px 20px -4px rgba(16, 24, 40, 0.1);
 }
 
-/* Person popup entrance animation */
-.person-popup {
-  animation: popup-enter 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+/* Person cards */
+.person-card {
+  transition: opacity 0.25s ease;
+  touch-action: none;
 }
 
-@keyframes popup-enter {
-  0% {
-    opacity: 0;
-    transform: translateX(-50%) scale(0.92);
+.person-card .card-body {
+  box-shadow:
+    0 0 0 1px rgba(16, 24, 40, 0.08),
+    0 1px 2px rgba(16, 24, 40, 0.05),
+    0 4px 12px -2px rgba(16, 24, 40, 0.06);
+  transition:
+    transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.2s ease;
+  cursor: grab;
+}
+
+.person-card:hover .card-body {
+  box-shadow:
+    0 0 0 1px rgba(16, 24, 40, 0.14),
+    0 8px 22px -6px rgba(16, 24, 40, 0.16);
+}
+
+.person-card .card-body.is-highlight {
+  box-shadow:
+    0 0 0 1.5px rgba(66, 98, 255, 0.45),
+    0 8px 22px -6px rgba(66, 98, 255, 0.2);
+}
+
+.person-card .card-body.is-path {
+  box-shadow:
+    0 0 0 2px #4262ff,
+    0 10px 28px -6px rgba(66, 98, 255, 0.35);
+}
+
+.person-card .card-body.is-selected {
+  box-shadow:
+    0 0 0 2px #4262ff,
+    0 0 0 6px rgba(66, 98, 255, 0.14),
+    0 10px 24px -8px rgba(66, 98, 255, 0.3);
+}
+
+.person-card .card-body.is-target {
+  box-shadow:
+    0 0 0 2px #4262ff,
+    0 0 0 8px rgba(66, 98, 255, 0.18);
+  transform: scale(1.04);
+}
+
+.person-card .card-body.is-dragging {
+  cursor: grabbing;
+  transform: scale(1.04) rotate(-1deg);
+  box-shadow:
+    0 0 0 2px #4262ff,
+    0 22px 40px -12px rgba(16, 24, 40, 0.3);
+}
+
+/* Marching-ants animation for path highlights and connection drafts */
+.edge-flow {
+  animation: edge-flow 0.7s linear infinite;
+}
+
+@keyframes edge-flow {
+  to {
+    stroke-dashoffset: -14;
   }
-  100% {
-    opacity: 1;
-  }
 }
 
-/* Custom scrollbar for popup */
+.edge-label {
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.06);
+}
+
+/* Thin scrollbars inside panels */
 .popup-scroll::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 .popup-scroll::-webkit-scrollbar-track {
@@ -167,10 +210,19 @@
 }
 
 .popup-scroll::-webkit-scrollbar-thumb {
-  background: #c7cad5;
+  background: #d7d9e0;
   border-radius: 10px;
 }
 
 .popup-scroll::-webkit-scrollbar-thumb:hover {
-  background: #a5a8b5;
+  background: #b5b8c4;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge-flow {
+    animation: none;
+  }
+  .person-card .card-body {
+    transition: none;
+  }
 }

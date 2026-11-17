@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import { Noto_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const notoSans = Noto_Sans({
+const inter = Inter({
   variable: "--font-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "Clarix — Relation Builder",
+  title: "Clarix — Relationship mapping on an infinite canvas",
   description:
-    "Build and visualize relational graphs with an interactive, drag-and-drop canvas.",
+    "Map families, teams and social circles on a collaborative-style infinite canvas. Drag to connect, auto-layout, find how anyone is connected, and export.",
 };
 
 export default function RootLayout({
@@ -20,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${notoSans.variable} h-full antialiased`}>
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col font-sans">{children}</body>
     </html>
   );

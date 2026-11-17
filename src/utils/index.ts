@@ -1,11 +1,8 @@
-import { MIRO_PASTELS, NODE_SIZE } from "@/constants";
+import { MIRO_PASTELS } from "@/constants";
+import type { Person, RelationType } from "@/types";
 
 /**
- * Generates a consistent, deterministic pastel color based on a string (e.g., a person's name).
- * This ensures that a node with the same name always gets the same color.
- * 
- * @param name - The string to hash for color generation.
- * @returns A hex color string from the pre-defined MIRO_PASTELS palette.
+ * Deterministic pastel colour from a string, so a name always maps to the same colour.
  */
 export const getColorFromName = (name: string): string => {
   let hash = 0;
@@ -15,14 +12,37 @@ export const getColorFromName = (name: string): string => {
   return MIRO_PASTELS[Math.abs(hash) % MIRO_PASTELS.length];
 };
 
-/**
- * Returns the visual size of a node based on the person's age.
- * Currently, it returns a uniform size (NODE_SIZE) for all nodes,
- * but this function acts as a centralized place to add scaling logic in the future.
- * 
- * @param _age - The age of the person (currently unused, kept for future scaling logic).
- * @returns The pixel size of the node.
- */
-export const getSizeFromAge = (_age: number): number => {
-  return NODE_SIZE;
+export const personColor = (p: Pick<Person, "name" | "color">) =>
+  p.color ?? getColorFromName(p.name);
+
+export const initials = (name: string) => {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
 };
+
+const KEYWORDS: Record<Exclude<RelationType, "other">, string[]> = {
+  family: [
+    "parent", "child", "son", "daughter", "mother", "father", "mom", "dad",
+    "spouse", "wife", "husband", "sibling", "brother", "sister", "cousin",
+    "uncle", "aunt", "grand", "niece", "nephew", "family",
+  ],
+  work: [
+    "manage", "report", "colleague", "boss", "employee", "mentor", "founder",
+    "cto", "ceo", "work", "team", "lead", "client", "intern",
+  ],
+  friend: ["friend", "buddy", "roommate", "neighbo", "partner", "classmate"],
+};
+
+/** Best-guess relation category from a free-text label (used for legacy data). */
+export const inferRelationType = (label: string): RelationType => {
+  const l = label.toLowerCase();
+  for (const t of ["family", "work", "friend"] as const) {
+    if (KEYWORDS[t].some((k) => l.includes(k))) return t;
+  }
+  return "other";
+};
+
+export const clamp = (v: number, min: number, max: number) =>
+  Math.min(Math.max(v, min), max);
