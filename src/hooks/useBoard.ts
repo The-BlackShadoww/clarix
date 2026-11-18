@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { BoardState, Person, Point, Relation, RelationType } from "@/types";
-import { STORAGE_KEY } from "@/constants";
+import { RELATION_TYPES, STORAGE_KEY } from "@/constants";
 import { DEFAULT_BOARD } from "@/lib/templates";
 import { inferRelationType } from "@/utils";
 
@@ -15,8 +15,12 @@ export const parseBoard = (raw: unknown): BoardState | null => {
   const obj: Partial<BoardState> = Array.isArray(raw) ? { persons: raw } : (raw as Partial<BoardState>);
   if (!Array.isArray(obj.persons)) return null;
   const persons: Person[] = [];
+  const seen = new Set<number>();
   for (const p of obj.persons as Person[]) {
-    if (typeof p?.id !== "number" || typeof p?.name !== "string") return null;
+    if (typeof p?.id !== "number" || !Number.isFinite(p.id) || typeof p?.name !== "string") return null;
+    // Duplicate ids would collide as React keys and corrupt relations — keep the first.
+    if (seen.has(p.id)) continue;
+    seen.add(p.id);
     persons.push({
       id: p.id,
       name: p.name,
@@ -25,11 +29,12 @@ export const parseBoard = (raw: unknown): BoardState | null => {
       role: typeof p.role === "string" ? p.role : undefined,
       color: typeof p.color === "string" ? p.color : undefined,
       relations: (Array.isArray(p.relations) ? p.relations : [])
-        .filter((r: Relation) => typeof r?.id === "number")
+        .filter((r: Relation) => typeof r?.id === "number" && r.id !== p.id)
         .map((r: Relation) => ({
           id: r.id,
           relation: String(r.relation ?? ""),
-          type: r.type ?? inferRelationType(String(r.relation ?? "")),
+          // Unknown types (hand-edited files) would crash colour lookups — re-infer them.
+          type: r.type && r.type in RELATION_TYPES ? r.type : inferRelationType(String(r.relation ?? "")),
         })),
     });
   }
@@ -75,6 +80,8 @@ export const useBoard = () => {
   const [savedState, setSavedState] = useState<BoardState | null>(null);
   const presentRef = useRef(history.present);
   const checkpoint = useRef<BoardState | null>(null);
+  /** Highest id handed out so far — prevents duplicate ids when adds happen before a re-render. */
+  const lastId = useRef(0);
 
   const board = history.present;
 
@@ -140,7 +147,11 @@ export const useBoard = () => {
     setHistory((h) =>
       h.future.length === 0
         ? h
-        : { past: [...h.past, h.present], present: h.future[0], future: h.future.slice(1) },
+        : {
+            past: [...h.past.slice(-HISTORY_LIMIT + 1), h.present],
+            present: h.future[0],
+            future: h.future.slice(1),
+          },
     );
   }, []);
 
@@ -149,7 +160,8 @@ export const useBoard = () => {
   const addPerson = useCallback(
     (data: Omit<Person, "id" | "relations">, at: Point): number => {
       const cur = presentRef.current.persons;
-      const id = cur.length ? Math.max(...cur.map((p) => p.id)) + 1 : 1;
+      const id = Math.max(lastId.current, 0, ...cur.map((p) => p.id)) + 1;
+      lastId.current = id;
       commit((s) => ({
         ...s,
         persons: [...s.persons, { ...data, id, relations: [] }],
@@ -230,6 +242,26 @@ export const useBoard = () => {
     [commit],
   );
 
+  /** Flips a relationship's direction as a single undo step (replacing any existing reverse link). */
+  const reverseRelation = useCallback(
+    (source: number, target: number) => {
+      commit((s) => {
+        const rel = s.persons.find((p) => p.id === source)?.relations.find((r) => r.id === target);
+        if (!rel) return s;
+        return {
+          ...s,
+          persons: s.persons.map((p) => {
+            if (p.id === source) return { ...p, relations: p.relations.filter((r) => r.id !== target) };
+            if (p.id === target)
+              return { ...p, relations: [...p.relations.filter((r) => r.id !== source), { ...rel, id: source }] };
+            return p;
+          }),
+        };
+      });
+    },
+    [commit],
+  );
+
   /* ---------------------------- layout ---------------------------- */
 
   const setPositions = useCallback(
@@ -263,6 +295,7 @@ export const useBoard = () => {
     addRelation,
     updateRelation,
     removeRelation,
+    reverseRelation,
     setPositions,
     setTitle,
     replaceBoard,

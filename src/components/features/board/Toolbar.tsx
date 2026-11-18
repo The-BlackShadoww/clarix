@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import type { Tool } from "@/types";
 import type { LayoutKind } from "@/lib/graph";
-import { IconButton, Kbd, Menu, MenuItem, MenuLabel, Panel } from "./primitives";
+import { IconButton, Kbd, Menu, MenuItem, MenuLabel, MOD, Panel } from "./primitives";
 
 type Props = {
   tool: Tool;
@@ -96,10 +96,10 @@ export const Toolbar: React.FC<Props> = ({
     </Panel>
 
     <Panel className="pointer-events-auto flex flex-col gap-0.5 p-1">
-      <IconButton label="Undo" shortcut="Ctrl Z" disabled={!canUndo} onClick={onUndo}>
+      <IconButton label="Undo" shortcut={`${MOD} Z`} disabled={!canUndo} onClick={onUndo}>
         <Undo2 className="size-[18px]" />
       </IconButton>
-      <IconButton label="Redo" shortcut="Ctrl Y" disabled={!canRedo} onClick={onRedo}>
+      <IconButton label="Redo" shortcut={`${MOD} Y`} disabled={!canRedo} onClick={onRedo}>
         <Redo2 className="size-[18px]" />
       </IconButton>
     </Panel>

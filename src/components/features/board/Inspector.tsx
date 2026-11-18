@@ -245,7 +245,7 @@ export const PersonInspector: React.FC<PersonInspectorProps> = ({
                         ev.stopPropagation();
                         onRemoveEdge(e);
                       }}
-                      className="flex size-7 items-center justify-center rounded-md text-[#a5a8b5] opacity-0 transition-opacity hover:bg-[#fff0f0] hover:text-[#d93636] group-hover/rel:opacity-100"
+                      className="flex size-7 items-center justify-center rounded-md text-[#a5a8b5] opacity-0 transition-opacity hover:bg-[#fff0f0] hover:text-[#d93636] focus-visible:opacity-100 group-hover/rel:opacity-100 group-focus-within/rel:opacity-100 [@media(hover:none)]:opacity-100"
                     >
                       <Trash2 className="size-3.5" />
                     </button>

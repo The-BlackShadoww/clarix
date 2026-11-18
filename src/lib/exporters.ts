@@ -9,6 +9,9 @@ const esc = (s: string) =>
 const slug = (s: string) =>
   s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "clarix-board";
 
+/** Truncates with an ellipsis so long names don't spill out of the exported card. */
+const fit = (s: string, max: number) => (s.length > max ? `${s.slice(0, max - 1).trimEnd()}…` : s);
+
 const download = (href: string, filename: string) => {
   const a = document.createElement("a");
   a.href = href;
@@ -62,8 +65,8 @@ export const boardToSvg = (board: BoardState) => {
 <rect x="${x}" y="${y}" width="${CARD_W}" height="${CARD_H}" rx="14" fill="#fff" stroke="#e0e2e8"/>
 <circle cx="${x + 32}" cy="${pos.y}" r="18" fill="${col}"/>
 <text x="${x + 32}" y="${pos.y + 4.5}" text-anchor="middle" font-size="13" font-weight="700" fill="#1c1c1e" ${font}>${esc(initials(p.name))}</text>
-<text x="${x + 60}" y="${pos.y - (sub ? 3 : -5)}" font-size="14" font-weight="600" fill="#1c1c1e" ${font}>${esc(p.name.slice(0, 20))}</text>
-${sub ? `<text x="${x + 60}" y="${pos.y + 14}" font-size="11.5" fill="#555a6a" ${font}>${esc(sub.slice(0, 26))}</text>` : ""}
+<text x="${x + 60}" y="${pos.y - (sub ? 3 : -5)}" font-size="14" font-weight="600" fill="#1c1c1e" ${font}>${esc(fit(p.name || "Unnamed", 20))}</text>
+${sub ? `<text x="${x + 60}" y="${pos.y + 14}" font-size="11.5" fill="#555a6a" ${font}>${esc(fit(sub, 26))}</text>` : ""}
 </g>`;
     })
     .join("\n");
@@ -90,11 +93,12 @@ export const exportPng = (board: BoardState) =>
   new Promise<void>((resolve, reject) => {
     const { svg, width, height } = boardToSvg(board);
     const img = new Image();
-    const scale = 2;
+    // 2× for crisp output, but stay under browsers' max canvas size (~16k px / ~268M px²) on huge boards.
+    const scale = Math.max(0.25, Math.min(2, 16000 / Math.max(width, height), Math.sqrt(2.5e8 / (width * height))));
     img.onload = () => {
       const canvas = document.createElement("canvas");
-      canvas.width = width * scale;
-      canvas.height = height * scale;
+      canvas.width = Math.round(width * scale);
+      canvas.height = Math.round(height * scale);
       const ctx = canvas.getContext("2d");
       if (!ctx) return reject(new Error("Canvas unsupported"));
       ctx.scale(scale, scale);

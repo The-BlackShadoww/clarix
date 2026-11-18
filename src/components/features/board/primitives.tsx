@@ -3,6 +3,12 @@
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
+/** Platform modifier label for shortcut hints. Only rendered inside the client-only board. */
+export const MOD =
+  typeof navigator !== "undefined" && /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent)
+    ? "⌘"
+    : "Ctrl";
+
 export const Kbd = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <kbd
     className={cn(
@@ -182,14 +188,15 @@ export const Dialog = ({
   if (!open) return null;
   return (
     <div
-      className="animate-in fade-in fixed inset-0 z-[100] flex items-start justify-center bg-[#1c1c1e]/25 px-4 pt-[12vh] backdrop-blur-[2px] duration-150"
+      className="animate-in fade-in fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-[#1c1c1e]/25 px-4 py-[max(16px,8vh)] backdrop-blur-[2px] duration-150 sm:py-[12vh]"
       onPointerDown={(e) => e.target === e.currentTarget && onClose()}
     >
       <div
         role="dialog"
         aria-modal="true"
         className={cn(
-          "board-panel animate-in fade-in zoom-in-95 slide-in-from-top-2 w-full max-w-[560px] overflow-hidden duration-200",
+          // Shrink-wrap to the viewport so tall dialogs (templates) scroll instead of overflowing on phones.
+          "board-panel animate-in fade-in zoom-in-95 slide-in-from-top-2 popup-scroll max-h-full w-full max-w-[560px] overflow-y-auto duration-200",
           className,
         )}
       >

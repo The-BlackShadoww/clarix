@@ -4,7 +4,8 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { CircleDot, FileImage, GitFork, LayoutTemplate, Maximize, Orbit, UserPlus } from "lucide-react";
 
 import type { Person, Point, RelationType, Selection, Tool } from "@/types";
-import { GRID_SIZE } from "@/constants";
+import { GRID_SIZE, ZOOM_MAX, ZOOM_MIN } from "@/constants";
+import { clamp } from "@/utils";
 import { useBoard, parseBoard } from "@/hooks/useBoard";
 import { useCamera } from "@/hooks/useCamera";
 import { buildEdges, computeLayout, edgeKey, findPath, getBounds, type Edge, type LayoutKind } from "@/lib/graph";
@@ -68,6 +69,10 @@ export default function Board() {
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
   const lastLayout = useRef<LayoutKind>("tree");
+  /** rAF id of the running auto-layout animation, so a new layout/undo can cancel it. */
+  const layoutAnim = useRef<number | null>(null);
+  /** Active two-finger pinch gesture (touch); while set, single-pointer gestures pause. */
+  const pinchRef = useRef<{ dist: number; mid: Point; cam: { x: number; y: number; scale: number } } | null>(null);
 
   /* ----------------------------- derived ----------------------------- */
 
@@ -171,10 +176,19 @@ export default function Board() {
     setPathQuery(null);
   }, []);
 
+  /** Stops a running layout animation, committing whatever frame it reached as one undo step. */
+  const stopLayoutAnimation = useCallback(() => {
+    if (layoutAnim.current === null) return;
+    cancelAnimationFrame(layoutAnim.current);
+    layoutAnim.current = null;
+    store.endTransient();
+  }, [store]);
+
   /** Animate every card from its current spot to the computed layout (one undo step). */
   const runLayout = useCallback(
     (kind: LayoutKind) => {
       if (board.persons.length === 0) return;
+      stopLayoutAnimation();
       lastLayout.current = kind;
       const from = board.positions;
       const to = computeLayout(kind, board.persons, allEdges, from);
@@ -190,16 +204,24 @@ export default function Board() {
           frame[id] = { x: a.x + (to[id].x - a.x) * k, y: a.y + (to[id].y - a.y) * k };
         }
         store.setPositions(frame, "transient");
-        if (t < 1) requestAnimationFrame(tick);
-        else store.endTransient();
+        if (t < 1) {
+          layoutAnim.current = requestAnimationFrame(tick);
+        } else {
+          layoutAnim.current = null;
+          store.endTransient();
+        }
       };
-      requestAnimationFrame(tick);
+      layoutAnim.current = requestAnimationFrame(tick);
       cam.fitBounds(getBounds(to));
       const names = { tree: "Hierarchy", force: "Organic", circle: "Circle" };
       notify(`${names[kind]} layout applied`);
     },
-    [board.persons, board.positions, allEdges, store, cam, notify],
+    [board.persons, board.positions, allEdges, store, cam, notify, stopLayoutAnimation],
   );
+
+  useEffect(() => () => {
+    if (layoutAnim.current !== null) cancelAnimationFrame(layoutAnim.current);
+  }, []);
 
   const addPersonAt = useCallback(
     (world: Point) => {
@@ -220,7 +242,18 @@ export default function Board() {
     addPersonAt({ x: (w / 2 - c.x) / c.scale + jitter, y: (h / 2 - c.y) / c.scale + jitter });
   }, [addPersonAt, board.persons.length, cam]);
 
+  const undo = useCallback(() => {
+    stopLayoutAnimation();
+    store.undo();
+  }, [stopLayoutAnimation, store]);
+
+  const redo = useCallback(() => {
+    stopLayoutAnimation();
+    store.redo();
+  }, [stopLayoutAnimation, store]);
+
   const deleteSelection = useCallback(() => {
+    stopLayoutAnimation();
     if (selection?.kind === "person") {
       const name = personById.get(selection.id)?.name;
       store.removePerson(selection.id);
@@ -231,7 +264,7 @@ export default function Board() {
     }
     setSelection(null);
     setPathQuery(null);
-  }, [selection, personById, store, notify]);
+  }, [selection, personById, store, notify, stopLayoutAnimation]);
 
   const duplicateSelection = useCallback(() => {
     if (selection?.kind !== "person") return;
@@ -247,13 +280,14 @@ export default function Board() {
 
   const loadBoard = useCallback(
     (next: typeof board) => {
+      stopLayoutAnimation();
       store.replaceBoard(next);
       setSelection(null);
       setPathQuery(null);
       setComposer(null);
       cam.fitBounds(getBounds(next.positions));
     },
-    [store, cam],
+    [store, cam, stopLayoutAnimation],
   );
 
   const pickTemplate = (t: Template | null) => {
@@ -303,29 +337,110 @@ export default function Board() {
 
   /* ------------------------------ gestures ------------------------------ */
 
+  /** Subscribes window move/up/cancel listeners for a single pointer; returns the unsubscribe. */
+  const trackPointer = (
+    pointerId: number,
+    onMove: (ev: PointerEvent) => void,
+    onEnd: (ev: PointerEvent, cancelled: boolean) => void,
+  ) => {
+    const move = (ev: PointerEvent) => ev.pointerId === pointerId && onMove(ev);
+    const up = (ev: PointerEvent) => {
+      if (ev.pointerId !== pointerId) return;
+      off();
+      onEnd(ev, ev.type === "pointercancel");
+    };
+    const off = () => {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+      window.removeEventListener("pointercancel", up);
+    };
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+    window.addEventListener("pointercancel", up);
+  };
+
   const startPan = (e: React.PointerEvent) => {
     cam.stopAnimation();
-    const start = { x: e.clientX, y: e.clientY, cx: cam.cameraRef.current.x, cy: cam.cameraRef.current.y };
+    let start = { x: e.clientX, y: e.clientY, cx: cam.cameraRef.current.x, cy: cam.cameraRef.current.y };
     let moved = false;
+    let paused = false;
     setIsPanning(true);
-    const onMove = (ev: PointerEvent) => {
-      const dx = ev.clientX - start.x;
-      const dy = ev.clientY - start.y;
-      if (Math.hypot(dx, dy) > 3) moved = true;
-      cam.setCamera((c) => ({ ...c, x: start.cx + dx, y: start.cy + dy }));
+    trackPointer(
+      e.pointerId,
+      (ev) => {
+        // A pinch takes over the camera; resume panning from wherever it left things.
+        if (pinchRef.current) {
+          paused = moved = true;
+          return;
+        }
+        if (paused) {
+          paused = false;
+          start = { x: ev.clientX, y: ev.clientY, cx: cam.cameraRef.current.x, cy: cam.cameraRef.current.y };
+        }
+        const dx = ev.clientX - start.x;
+        const dy = ev.clientY - start.y;
+        if (Math.hypot(dx, dy) > 3) moved = true;
+        cam.setCamera((c) => ({ ...c, x: start.cx + dx, y: start.cy + dy }));
+      },
+      (_ev, cancelled) => {
+        setIsPanning(false);
+        if (!moved && !cancelled) {
+          setSelection(null);
+          setPathQuery(null);
+        }
+      },
+    );
+  };
+
+  // Two-finger pinch to zoom (and pan) on touch screens.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const { cameraRef, setCamera, stopAnimation } = cam;
+    const touches = new Map<number, Point>();
+    const measure = () => {
+      const [a, b] = [...touches.values()];
+      return { dist: Math.max(Math.hypot(a.x - b.x, a.y - b.y), 1), mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 } };
     };
-    const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      setIsPanning(false);
-      if (!moved) {
-        setSelection(null);
-        setPathQuery(null);
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (touches.size === 2) {
+        stopAnimation();
+        pinchRef.current = { ...measure(), cam: { ...cameraRef.current } };
       }
     };
+    const onMove = (e: PointerEvent) => {
+      if (!touches.has(e.pointerId)) return;
+      touches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const p = pinchRef.current;
+      if (!p || touches.size < 2) return;
+      const { dist, mid } = measure();
+      const rect = el.getBoundingClientRect();
+      const scale = clamp(p.cam.scale * (dist / p.dist), ZOOM_MIN, ZOOM_MAX);
+      // Keep the world point under the initial midpoint under the fingers' current midpoint.
+      const wx = (p.mid.x - rect.left - p.cam.x) / p.cam.scale;
+      const wy = (p.mid.y - rect.top - p.cam.y) / p.cam.scale;
+      setCamera({ scale, x: mid.x - rect.left - wx * scale, y: mid.y - rect.top - wy * scale });
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!touches.delete(e.pointerId)) return;
+      if (touches.size < 2) pinchRef.current = null;
+    };
+    // Capture phase so the pinch is registered before React's card / canvas handlers run.
+    el.addEventListener("pointerdown", onDown, true);
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
-  };
+    window.addEventListener("pointercancel", onUp);
+    return () => {
+      el.removeEventListener("pointerdown", onDown, true);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
+    };
+    // cam's members used here are stable refs / callbacks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const startConnect = (e: React.PointerEvent, fromId: number) => {
     e.stopPropagation();
@@ -333,33 +448,34 @@ export default function Board() {
     const fromPos = board.positions[fromId];
     if (!fromPos) return;
     setDraft({ from: fromId, to: fromPos, target: null });
-    const onMove = (ev: PointerEvent) => {
+    const targetAt = (ev: PointerEvent) => {
       const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-person-id]");
-      const target = el ? Number(el.getAttribute("data-person-id")) : null;
-      const valid = target !== null && target !== fromId ? target : null;
-      const to = valid !== null ? board.positions[valid] : cam.screenToWorld(ev.clientX, ev.clientY);
-      setDraft({ from: fromId, to, target: valid });
+      const id = el ? Number(el.getAttribute("data-person-id")) : null;
+      return id !== null && id !== fromId && board.positions[id] ? id : null;
     };
-    const onUp = (ev: PointerEvent) => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      setDraft(null);
-      const el = document.elementFromPoint(ev.clientX, ev.clientY)?.closest("[data-person-id]");
-      const target = el ? Number(el.getAttribute("data-person-id")) : null;
-      if (target !== null && target !== fromId) {
-        setComposer({ from: fromId, to: target, at: { x: ev.clientX, y: ev.clientY } });
-      }
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+    trackPointer(
+      e.pointerId,
+      (ev) => {
+        const valid = targetAt(ev);
+        const to = valid !== null ? board.positions[valid] : cam.screenToWorld(ev.clientX, ev.clientY);
+        setDraft({ from: fromId, to, target: valid });
+      },
+      (ev, cancelled) => {
+        setDraft(null);
+        const target = cancelled || pinchRef.current ? null : targetAt(ev);
+        if (target !== null) setComposer({ from: fromId, to: target, at: { x: ev.clientX, y: ev.clientY } });
+      },
+    );
   };
 
   const onCardPointerDown = (e: React.PointerEvent, id: number) => {
     if (e.button !== 0) return;
+    if (pinchRef.current) return e.stopPropagation(); // second finger of a pinch
     if (tool === "hand" || spaceHeld) return; // let the canvas pan
     if (tool === "connect") return startConnect(e, id);
     e.stopPropagation();
     cam.stopAnimation();
+    stopLayoutAnimation();
     setComposer(null);
     const origin = board.positions[id];
     if (!origin) return;
@@ -367,35 +483,43 @@ export default function Board() {
     const scale = cam.cameraRef.current.scale;
     let dragging = false;
 
-    const onMove = (ev: PointerEvent) => {
-      const dx = (ev.clientX - start.x) / scale;
-      const dy = (ev.clientY - start.y) / scale;
-      if (!dragging) {
-        if (Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 4) return;
-        dragging = true;
-        store.beginTransient();
-        setDraggingId(id);
-      }
-      store.setPositions({ [id]: { x: origin.x + dx, y: origin.y + dy } }, "transient");
-    };
-    const onUp = (ev: PointerEvent) => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-      if (dragging) {
-        // Snap to the dot grid on release (hold Alt to place freely).
-        if (!ev.altKey) {
-          const dx = (ev.clientX - start.x) / scale;
-          const dy = (ev.clientY - start.y) / scale;
-          const snap = (v: number) => Math.round(v / (GRID_SIZE / 2)) * (GRID_SIZE / 2);
-          store.setPositions({ [id]: { x: snap(origin.x + dx), y: snap(origin.y + dy) } }, "transient");
+    let pinched = false;
+    let last = { x: e.clientX, y: e.clientY };
+
+    trackPointer(
+      e.pointerId,
+      (ev) => {
+        // Freeze the card while a pinch is zooming the board.
+        if (pinchRef.current) {
+          pinched = true;
+          return;
         }
-        store.endTransient();
-        setDraggingId(null);
-      }
-      selectPerson(id);
-    };
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp);
+        last = { x: ev.clientX, y: ev.clientY };
+        if (!dragging) {
+          if (pinched || Math.hypot(ev.clientX - start.x, ev.clientY - start.y) < 4) return;
+          dragging = true;
+          store.beginTransient();
+          setDraggingId(id);
+        }
+        const dx = (ev.clientX - start.x) / scale;
+        const dy = (ev.clientY - start.y) / scale;
+        store.setPositions({ [id]: { x: origin.x + dx, y: origin.y + dy } }, "transient");
+      },
+      (ev, cancelled) => {
+        if (dragging) {
+          // Snap to the dot grid on release (hold Alt to place freely).
+          if (!ev.altKey) {
+            const dx = (last.x - start.x) / scale;
+            const dy = (last.y - start.y) / scale;
+            const snap = (v: number) => Math.round(v / (GRID_SIZE / 2)) * (GRID_SIZE / 2);
+            store.setPositions({ [id]: { x: snap(origin.x + dx), y: snap(origin.y + dy) } }, "transient");
+          }
+          store.endTransient();
+          setDraggingId(null);
+        }
+        if (!cancelled && !pinched) selectPerson(id);
+      },
+    );
   };
 
   const onEdgePointerDown = (e: React.PointerEvent, edge: Edge) => {
@@ -406,6 +530,7 @@ export default function Board() {
   };
 
   const onCanvasPointerDown = (e: React.PointerEvent) => {
+    if (pinchRef.current) return; // second finger of a pinch — the pinch handler owns it
     if (e.button === 1 || tool === "hand" || spaceHeld) {
       e.preventDefault();
       return startPan(e);
@@ -434,13 +559,13 @@ export default function Board() {
 
       if (mod && e.key.toLowerCase() === "z") {
         e.preventDefault();
-        if (e.shiftKey) store.redo();
-        else store.undo();
+        if (e.shiftKey) redo();
+        else undo();
         return;
       }
       if (mod && e.key.toLowerCase() === "y") {
         e.preventDefault();
-        store.redo();
+        redo();
         return;
       }
       if (mod && e.key.toLowerCase() === "d") {
@@ -485,7 +610,7 @@ export default function Board() {
       window.removeEventListener("keyup", onKeyUp);
       window.removeEventListener("blur", onBlur);
     };
-  }, [paletteOpen, templatesOpen, shortcutsOpen, store, duplicateSelection, fitAll, runLayout, cam, deleteSelection]);
+  }, [paletteOpen, templatesOpen, shortcutsOpen, undo, redo, duplicateSelection, fitAll, runLayout, cam, deleteSelection]);
 
   /* ------------------------------ commands ------------------------------ */
 
@@ -604,8 +729,8 @@ export default function Board() {
         onTemplates={() => setTemplatesOpen(true)}
         canUndo={store.canUndo}
         canRedo={store.canRedo}
-        onUndo={store.undo}
-        onRedo={store.redo}
+        onUndo={undo}
+        onRedo={redo}
         layoutDisabled={board.persons.length < 2}
       />
       <Legend
@@ -680,8 +805,7 @@ export default function Board() {
           onClose={() => setSelection(null)}
           onUpdate={(patch) => store.updateRelation(selectedEdge.source, selectedEdge.target, patch)}
           onReverse={() => {
-            store.removeRelation(selectedEdge.source, selectedEdge.target);
-            store.addRelation(selectedEdge.target, selectedEdge.source, selectedEdge.label, selectedEdge.type);
+            store.reverseRelation(selectedEdge.source, selectedEdge.target);
             setSelection({ kind: "edge", source: selectedEdge.target, target: selectedEdge.source });
           }}
           onDelete={deleteSelection}

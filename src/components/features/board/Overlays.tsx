@@ -8,7 +8,7 @@ import type { Edge } from "@/lib/graph";
 import { TEMPLATES, type Template } from "@/lib/templates";
 import { initials, personColor } from "@/utils";
 import { cn } from "@/lib/utils";
-import { Dialog, Kbd, Panel } from "./primitives";
+import { Dialog, Kbd, MOD, Panel } from "./primitives";
 import { TypePicker } from "./Inspector";
 
 /* ------------------------------------------------------------------ */
@@ -68,7 +68,7 @@ const PaletteBody = ({ onClose, commands }: { onClose: () => void; commands: Com
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
               e.preventDefault();
-              setActive((a) => Math.min(a + 1, results.length - 1));
+              setActive((a) => Math.max(0, Math.min(a + 1, results.length - 1)));
             } else if (e.key === "ArrowUp") {
               e.preventDefault();
               setActive((a) => Math.max(a - 1, 0));
@@ -145,12 +145,13 @@ export const RelationComposer: React.FC<{
     <div
       className="fixed z-[90]"
       style={{
-        left: Math.min(Math.max(at.x, 180), (typeof window !== "undefined" ? window.innerWidth : 1200) - 180),
-        top: Math.min(at.y + 14, (typeof window !== "undefined" ? window.innerHeight : 800) - 280),
+        // Keep the 340px-wide panel fully on screen, even on narrow phones and near the bottom edge.
+        left: Math.max(Math.min(at.x, window.innerWidth - 178), Math.min(178, window.innerWidth / 2)),
+        top: Math.max(8, Math.min(at.y + 14, window.innerHeight - 290)),
       }}
       onPointerDown={(e) => e.stopPropagation()}
     >
-      <Panel className="animate-in fade-in zoom-in-95 w-[340px] -translate-x-1/2 p-3 duration-150">
+      <Panel className="animate-in fade-in zoom-in-95 w-[min(340px,calc(100vw-16px))] -translate-x-1/2 p-3 duration-150">
         <div className="mb-3 flex items-center gap-2 text-[13px] font-semibold text-[#1c1c1e]">
           <PersonDot person={from} size={22} />
           <span className="max-w-[100px] truncate">{from.name}</span>
@@ -167,6 +168,7 @@ export const RelationComposer: React.FC<{
           value={label}
           onChange={(e) => setLabel(e.target.value)}
           onKeyDown={(e) => {
+            if (e.nativeEvent.isComposing) return; // don't submit mid-IME composition
             if (e.key === "Enter") submit();
             if (e.key === "Escape") onCancel();
           }}
@@ -179,9 +181,8 @@ export const RelationComposer: React.FC<{
               key={s}
               type="button"
               onClick={() => submit(s)}
-              className="rounded-full border border-[#e3e5eb] px-2.5 py-1 text-[12px] font-medium text-[#555a6a] transition-colors hover:border-transparent hover:text-white"
-              onMouseEnter={(e) => (e.currentTarget.style.background = cfg.color)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = "")}
+              className="rounded-full border border-[#e3e5eb] px-2.5 py-1 text-[12px] font-medium text-[#555a6a] transition-colors hover:border-transparent hover:bg-[var(--chip)] hover:text-white focus-visible:border-transparent focus-visible:bg-[var(--chip)] focus-visible:text-white focus-visible:outline-none"
+              style={{ "--chip": cfg.color } as React.CSSProperties}
             >
               {s}
             </button>
@@ -295,7 +296,7 @@ export const TemplatesDialog: React.FC<{
     <div className="flex items-start justify-between px-5 pb-2 pt-5">
       <div>
         <h2 className="text-[20px] font-semibold tracking-[-0.5px] text-[#1c1c1e]">Start from a template</h2>
-        <p className="mt-0.5 text-[13.5px] text-[#6b7083]">Replaces the current board — you can undo with Ctrl Z.</p>
+        <p className="mt-0.5 text-[13.5px] text-[#6b7083]">Replaces the current board — you can undo with {MOD} Z.</p>
       </div>
       <button type="button" aria-label="Close" onClick={onClose} className="flex size-8 items-center justify-center rounded-md text-[#6b7083] hover:bg-[#f3f4f8]">
         <X className="size-4" />
@@ -343,10 +344,10 @@ const SHORTCUTS: [string, string[]][] = [
   ["Add person", ["P"]],
   ["Connect people", ["C"]],
   ["Pan temporarily", ["Space", "drag"]],
-  ["Search & commands", ["Ctrl", "K"]],
-  ["Undo / Redo", ["Ctrl", "Z / Y"]],
+  ["Search & commands", [MOD, "K"]],
+  ["Undo / Redo", [MOD, "Z / Y"]],
   ["Delete selection", ["Del"]],
-  ["Duplicate person", ["Ctrl", "D"]],
+  ["Duplicate person", [MOD, "D"]],
   ["Auto-layout", ["L"]],
   ["Fit to screen", ["Shift", "1"]],
   ["Zoom in / out", ["+", "−"]],
@@ -383,7 +384,11 @@ export const ShortcutsDialog: React.FC<{ open: boolean; onClose: () => void }> =
 
 export const Toast: React.FC<{ message: string | null }> = ({ message }) =>
   message ? (
-    <div className="animate-in fade-in slide-in-from-bottom-2 pointer-events-none fixed bottom-20 left-1/2 z-[120] -translate-x-1/2 rounded-full bg-[#1c1c1e] px-4 py-2 text-[13px] font-medium text-white shadow-lg duration-200">
+    <div
+      role="status"
+      aria-live="polite"
+      className="animate-in fade-in slide-in-from-bottom-2 pointer-events-none fixed bottom-20 left-1/2 z-[120] max-w-[calc(100vw-32px)] -translate-x-1/2 truncate rounded-full bg-[#1c1c1e]/95 px-4 py-2 text-[13px] font-medium text-white shadow-[0_8px_24px_-6px_rgba(16,24,40,0.35)] backdrop-blur-sm duration-200"
+    >
       {message}
     </div>
   ) : null;

@@ -15,7 +15,7 @@ import {
   Search,
   Upload,
 } from "lucide-react";
-import { IconButton, Kbd, Menu, MenuDivider, MenuItem, MenuLabel, Panel } from "./primitives";
+import { IconButton, Kbd, Menu, MenuDivider, MenuItem, MenuLabel, MOD, Panel } from "./primitives";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -136,7 +136,7 @@ export const TopBar: React.FC<Props> = ({
           >
             <Search className="size-4" />
             <span className="hidden flex-1 text-left sm:inline">Search people…</span>
-            <Kbd className="hidden sm:inline-flex">Ctrl K</Kbd>
+            <Kbd className="hidden sm:inline-flex">{MOD} K</Kbd>
           </button>
           <div className="hidden sm:block">
             <IconButton label="Shortcuts" shortcut="?" side="bottom" onClick={onShortcuts}>
