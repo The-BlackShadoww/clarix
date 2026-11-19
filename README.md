@@ -4,12 +4,13 @@
 
 ## Features
 
-- **Miro-style infinite canvas** — floating tool rail, dot grid, smooth pan/zoom (mouse wheel, trackpad pinch, Space-drag), minimap and fit-to-screen.
+- **Miro-style infinite canvas** — floating tool rail, dot grid, smooth pan/zoom (mouse wheel, trackpad pinch, Space-drag, two-finger pinch on touch screens), minimap and fit-to-screen.
 - **Drag-to-connect relationships** — hover a person card and drag a handle onto someone else. Choose a type (Family, Work, Friend, Other) and a label; connectors are colour-coded, curve around cards in their way, and can be filtered from the legend.
 - **One-click auto-layout** — Hierarchy (family trees / org charts, spouses kept side by side), Organic (force-directed) and Circle, with animated transitions.
 - **“How are they connected?” path finder** — pick two people to highlight the shortest chain of relationships and the degrees of separation between them.
 - **Command palette (Ctrl/⌘ K)** — jump to any person or run layouts, exports and templates from the keyboard.
-- **Workspace essentials** — inspector panel for editing people and relationships, autosave to localStorage, full undo/redo, templates (family tree, startup team, friend circle), and export to PNG, SVG or JSON (plus JSON import).
+- **Workspace essentials** — inspector panel for editing people and relationships, autosave to localStorage, full undo/redo, templates (family tree, startup team, friend circle), and export to PNG, SVG or JSON (plus a JSON import that safely skips duplicate people and self-links).
+- **Landing page** — a hero with a product mockup, a bento feature grid, how-it-works, use cases and an FAQ, with scroll-reveal animations.
 
 ### Keyboard shortcuts
 
@@ -24,12 +25,14 @@
 | Toggle minimap | M |
 | All shortcuts | ? |
 
+On macOS, use ⌘ instead of Ctrl. The in-app shortcut hints show the right modifier for your platform.
+
 ## Tech Stack
 
-- **Framework**: [Next.js](https://nextjs.org/) (App Router)
-- **Library**: [React](https://react.dev/)
+- **Framework**: [Next.js](https://nextjs.org/) 16 (App Router)
+- **Library**: [React](https://react.dev/) 19
 - **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/) v4
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Form Validation**: [React Hook Form](https://react-hook-form.com/) & [Zod](https://zod.dev/)
@@ -78,6 +81,12 @@ Navigate to `/canvas` (or click "Get Started Free") to open the Relation Builder
 3. **Arrange** — open the auto-layout menu in the tool rail (or press `L`).
 4. **Explore** — select a person to spotlight their connections, or use “Find path to…” in the inspector.
 5. **Export** — use the Export button for PNG/SVG/JSON; import JSON from the board menu.
+
+## Documentation
+
+- [ARCHITECTURE.md](ARCHITECTURE.md) — code structure, data model, state/history and interaction design
+- [DESIGN.md](DESIGN.md) — visual design system reference
+- [CHANGELOG.md](CHANGELOG.md) — notable changes, newest first
 
 ## License
 
